@@ -1,0 +1,3 @@
+src/context/AuthContext.tsx(4,10): error TS1484: 'User' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/context/AuthContext.tsx(4,16): error TS1484: 'LoginCredentials' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/context/AuthContext.tsx(4,34): error TS1484: 'RegisterCredentials' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
