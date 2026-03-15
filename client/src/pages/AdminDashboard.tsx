@@ -3,6 +3,9 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '../types';
 import io from 'socket.io-client';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
 const AdminDashboard: React.FC = () => {
     const { user } = useAuth();
@@ -19,14 +22,17 @@ const AdminDashboard: React.FC = () => {
         // In a real app, this socket would listen to an 'adminRoom'
         const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
         
-        // Mock data fetch - In reality, fetch from API or listen to socket events 'userConnected', 'userDisconnected'
-        const mockUsers: User[] = [
-             { _id: '1', firstName: 'Jane', lastName: 'Doe', username: 'jane123', email: 'jane@hosen.app', role: 'user', profileCompleted: true, status: 'safe', lastStatusUpdate: new Date() },
-             { _id: '2', firstName: 'John', lastName: 'Smith', username: 'jsmith', email: 'john@hosen.app', role: 'user', profileCompleted: true, status: 'in-danger', lastStatusUpdate: new Date() },
-        ];
-        
-        if (user) {
-             setConnectedUsers([user, ...mockUsers]);
+        const fetchUsers = async () => {
+             try {
+                 const res = await axios.get(`${API_URL}/admin/users`);
+                 setConnectedUsers(res.data);
+             } catch (err) {
+                 console.error("Failed to fetch admin network users:", err);
+             }
+        };
+
+        if (user && user.role === 'admin') {
+             fetchUsers();
         }
 
         socket.on('statusUpdated', (data: any) => {

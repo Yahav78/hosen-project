@@ -55,6 +55,9 @@ app.use('/api/inventory', inventoryRoutes);
 
 import vaultRoutes from './routes/vaultRoutes';
 app.use('/api/vault', vaultRoutes);
+
+import adminRoutes from './routes/adminRoutes';
+app.use('/api/admin', adminRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Basic Route
