@@ -78,7 +78,7 @@ const Vault: React.FC = () => {
                 {/* Upload Form */}
                 <form onSubmit={handleUpload} style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <h4 style={{ margin: 0 }}>Upload New Document</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div className="grid-2">
                         <input type="text" className="input-field" placeholder="Title (Optional)" value={title} onChange={(e) => setTitle(e.target.value)} />
                         <select className="input-field" value={category} onChange={(e) => setCategory(e.target.value as any)}>
                             <option value="other">Category: Other</option>
@@ -87,7 +87,7 @@ const Vault: React.FC = () => {
                             <option value="medical">Medical</option>
                         </select>
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <div className="flex-responsive">
                         <input type="file" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} style={{ flex: 1, backgroundColor: 'var(--surface-color)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} required />
                         <button type="submit" className="btn btn-primary" disabled={isUploading}>
                             {isUploading ? 'Uploading...' : 'Upload'}

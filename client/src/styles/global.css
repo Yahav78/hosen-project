@@ -137,6 +137,12 @@ button {
   gap: 2rem;
 }
 
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 .flex-responsive {
   display: flex;
   justify-content: space-between;
@@ -145,7 +151,7 @@ button {
 }
 
 @media (max-width: 900px) {
-  .grid-sidebar {
+  .grid-sidebar, .grid-2 {
     grid-template-columns: 1fr;
   }
   
