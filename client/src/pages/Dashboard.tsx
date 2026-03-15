@@ -143,12 +143,12 @@ const Dashboard: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
-      <header className="glass-panel" style={{ padding: '1.5rem 2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header className="glass-panel flex-responsive" style={{ padding: '1.5rem 2rem' }}>
         <div>
             <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>HOSEN</h1>
             <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Resilience Network</p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="flex-responsive" style={{ gap: '1rem' }}>
             {user?.role === 'admin' && (
                 <button className="btn" style={{ backgroundColor: 'var(--warning-color)', color: 'black' }} onClick={() => window.location.href='/admin'}>
                     Admin Panel
@@ -164,7 +164,7 @@ const Dashboard: React.FC = () => {
       </header>
 
       {/* Main Content Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '2rem' }}>
+      <div className="grid-sidebar">
           
           {/* Family Status Feed */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

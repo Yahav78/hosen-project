@@ -129,3 +129,45 @@ button {
   transform: translateY(-1px);
   box-shadow: 0 6px 20px rgba(239, 68, 68, 0.23);
 }
+
+/* Responsive Grid layouts */
+.grid-sidebar {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 2rem;
+}
+
+.flex-responsive {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .grid-sidebar {
+    grid-template-columns: 1fr;
+  }
+  
+  .flex-responsive {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  /* Global Mobile Overrides */
+  .glass-panel form {
+    flex-direction: column !important;
+  }
+
+  .glass-panel form button {
+    width: 100% !important;
+  }
+
+  input[type="file"] {
+    width: 100% !important;
+  }
+}
