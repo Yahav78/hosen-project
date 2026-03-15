@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import type { User } from '../types';
 import io from 'socket.io-client';
 import { useAudioDetection } from '../hooks/useAudioDetection';
 import axios from 'axios';
