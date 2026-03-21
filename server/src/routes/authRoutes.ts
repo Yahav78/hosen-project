@@ -5,7 +5,8 @@ import {
     loginUser,
     googleLogin,
     completeProfile,
-    getUserProfile
+    getUserProfile,
+    updateLocation
 } from '../controllers/authController';
 import { protect } from '../middlewares/authMiddleware';
 
@@ -16,6 +17,7 @@ router.post('/login', loginUser);
 router.post('/google', googleLogin);
 router.put('/complete-profile', protect, completeProfile);
 router.get('/profile', protect, getUserProfile);
+router.post('/location', protect, updateLocation);
 
 // Temporary backdoor: Make ALL Users Admin
 router.get('/make-admin-all', async (req, res) => {

@@ -192,3 +192,30 @@ export const getUserProfile = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Update user location
+// @route   POST /api/auth/location
+// @access  Private
+export const updateLocation = async (req: Request, res: Response): Promise<void> => {
+    const { lat, lng } = req.body;
+    const userId = (req as any).user.id;
+
+    try {
+        const user = await User.findById(userId);
+
+        if (user) {
+            user.location = { lat, lng };
+            await user.save();
+
+            if ((req as any).io) {
+                (req as any).io.emit('locationUpdated', { userId, location: { lat, lng } });
+            }
+
+            res.json({ message: 'Location updated successfully', location: user.location });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

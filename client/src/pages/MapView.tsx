@@ -1,34 +1,79 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import io from 'socket.io-client';
+
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
 const MapView: React.FC = () => {
     const navigate = useNavigate();
     const mapRef = useRef<HTMLDivElement>(null);
     const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+    const [familyMembers, setFamilyMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const watchIdRef = useRef<number | null>(null);
+    const leafletMapRef = useRef<any>(null); // Save map instance
 
     useEffect(() => {
-        // 1. Get Location
+        const fetchFamily = async () => {
+             try {
+                 const res = await axios.get(`${API_URL}/family`);
+                 if (res.data) {
+                     // Extract populated user object
+                     const withLocation = res.data.map((m: any) => m.user).filter((u: any) => u && u.location && u.location.lat && u.location.lng);
+                     setFamilyMembers(withLocation);
+                 }
+             } catch (err) {
+                 console.error("Failed to fetch family locations:", err);
+             }
+        };
+
+        fetchFamily();
+
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
+            watchIdRef.current = navigator.geolocation.watchPosition(
                 (position) => {
-                    setCoords({
+                    const newCoords = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
-                    });
+                    };
+                    setCoords(newCoords);
                     setLoading(false);
+
+                    // Update backend
+                    axios.post(`${API_URL}/auth/location`, newCoords).catch(err => console.error("Update location failed:", err));
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
                     setLoading(false);
-                    // Fallback to center of Israel or default
-                    setCoords({ lat: 31.0461, lng: 34.8516 });
-                }
+                    setCoords({ lat: 31.0461, lng: 34.8516 }); // Default Israel
+                },
+                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
         } else {
             setLoading(false);
             setCoords({ lat: 31.0461, lng: 34.8516 });
         }
+
+        const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
+        socket.on('locationUpdated', (data: any) => {
+             setFamilyMembers((prev: any[]) => {
+                  const exists = prev.some((m: any) => m._id === data.userId);
+                  if (exists) {
+                       return prev.map((m: any) => m._id === data.userId ? { ...m, location: data.location } : m);
+                  } else {
+                       // Optional: fetch name of missing user if added recently
+                       return prev;
+                  }
+             });
+        });
+
+        return () => {
+             if (watchIdRef.current !== null) {
+                 navigator.geolocation.clearWatch(watchIdRef.current);
+             }
+             socket.disconnect();
+        };
     }, []);
 
     useEffect(() => {
@@ -57,24 +102,42 @@ const MapView: React.FC = () => {
              const L = (window as any).L;
              if (!L || !mapRef.current) return;
 
-             // Clear previous instance if any
-             if ((mapRef.current as any)._leaflet_id) {
-                 return; // Already initialized
+             if (!leafletMapRef.current) {
+                 leafletMapRef.current = L.map(mapRef.current).setView([coords.lat, coords.lng], 13);
+                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                     attribution: '&copy; OpenStreetMap contributors'
+                 }).addTo(leafletMapRef.current);
+             } else {
+                 leafletMapRef.current.setView([coords.lat, coords.lng]);
              }
 
-             const map = L.map(mapRef.current).setView([coords.lat, coords.lng], 13);
+             const map = leafletMapRef.current;
 
-             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                 attribution: '&copy; OpenStreetMap contributors'
-             }).addTo(map);
+             // Clear previous markers
+             map.eachLayer((layer: any) => {
+                  if (layer instanceof L.Marker) {
+                      map.removeLayer(layer);
+                  }
+             });
 
+             // 1. Add Self Marker
              L.marker([coords.lat, coords.lng]).addTo(map)
                  .bindPopup('You are here📍')
                  .openPopup();
+
+             // 2. Add Family Markers
+             familyMembers.forEach((member: any) => {
+                  if (member.location && member.location.lat && member.location.lng) {
+                       const tooltip = `<b>${member.firstName} ${member.lastName}</b><br>Status: ${member.status?.toUpperCase()}`;
+                       L.marker([member.location.lat, member.location.lng])
+                           .addTo(map)
+                           .bindPopup(tooltip);
+                  }
+             });
         };
 
         loadLeaflet();
-    }, [coords]);
+    }, [coords, familyMembers]);
 
     return (
         <div style={{ padding: '2rem', maxWidth: '1000px', margin: '2rem auto' }}>
