@@ -62,6 +62,19 @@ const Dashboard: React.FC = () => {
      }
   }, [startListening, isListening]);
 
+  useEffect(() => {
+      // Auto-fetch recommendations on Dashboard load cleanly
+      const fetchInitialRecommendations = async () => {
+          try {
+              const res = await axios.post(`${API_URL}/resilience/calculate`);
+              setRecommendations(res.data.recommendations || []);
+          } catch (err) {
+              console.error('Failed to trigger background resilience sync');
+          }
+      };
+      fetchInitialRecommendations();
+  }, []);
+
   const handleImSafe = () => {
      // Mock update
      if(socket && user) {
