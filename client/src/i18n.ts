@@ -110,7 +110,20 @@ const resources = {
       "map_title": "View Map",
       "map_desc": "Localizing safe zones and connected user coordinates securely.",
       "retrieving_gps": "Retrieving GPS Coordinates...",
-      "you_are_here": "You are here"
+      "you_are_here": "You are here",
+      "res_family_connected": "Family network connected ({{count}} members).",
+      "res_family_none": "No family members linked yet. Connect with at least 1 person.",
+      "res_profile_done": "Profile setup completed.",
+      "res_profile_pending": "Complete your profile details up ahead.",
+      "res_status_set": "Emergency status is set to: {{status}}.",
+      "res_status_none": "Set your readiness status on the dashboard.",
+      "res_inv_stocked": "Inventory: {{metCount}}/{{total}} items fully stocked.",
+      "res_inv_low": "Low stock on: {{items}}.",
+      "res_inv_none": "Initialize your inventory items list.",
+      "res_vault_uploaded": "Vault: {{count}} documents uploaded.",
+      "res_vault_none": "Upload critical documents in The Vault.",
+      "res_map_verified": "Location coordinates verified on map.",
+      "res_map_none": "Register location coordinates on map view."
     }
   },
   he: {
