@@ -5,6 +5,7 @@ import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import './styles/global.css' // Custom CSS per requirements
+import './i18n'; // Import i18n configuration for translation hooks
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1028915940352-pduukjhmejqpmeou864ectn9ncfg21tn.apps.googleusercontent.com';
 

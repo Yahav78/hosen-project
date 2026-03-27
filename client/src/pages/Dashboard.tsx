@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { useAudioDetection } from '../hooks/useAudioDetection';
+import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
@@ -10,6 +11,7 @@ const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/
 const Dashboard: React.FC = () => {
   const { user, logout, fetchProfile } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -145,20 +147,20 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className="glass-panel flex-responsive" style={{ padding: '1.5rem 2rem' }}>
         <div>
-            <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>HOSEN</h1>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>Resilience Network</p>
+            <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>{t('app_name')}</h1>
+            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t('app_desc')}</p>
         </div>
         <div className="flex-responsive" style={{ gap: '1rem' }}>
             {user?.role === 'admin' && (
                 <button className="btn" style={{ backgroundColor: 'var(--warning-color)', color: 'black' }} onClick={() => window.location.href='/admin'}>
-                    Admin Panel
+                    {t('admin_panel')}
                 </button>
             )}
             <button className="btn btn-danger" onClick={() => window.location.href='/emergency'}>
-                EMERGENCY OVERRIDE
+                {t('emergency_override')}
             </button>
             <button className="btn" style={{ backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={logout}>
-                Sign Out
+                {t('sign_out')}
             </button>
         </div>
       </header>

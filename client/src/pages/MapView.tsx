@@ -2,11 +2,13 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
 const MapView: React.FC = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const mapRef = useRef<HTMLDivElement>(null);
     const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [familyMembers, setFamilyMembers] = useState<any[]>([]);
@@ -122,7 +124,7 @@ const MapView: React.FC = () => {
 
              // 1. Add Self Marker
              L.marker([coords.lat, coords.lng]).addTo(map)
-                 .bindPopup('You are here📍')
+                 .bindPopup(t('you_are_here', 'You are here 📍'))
                  .openPopup();
 
              // 2. Add Family Markers
@@ -142,14 +144,14 @@ const MapView: React.FC = () => {
     return (
         <div style={{ padding: '2rem', maxWidth: '1000px', margin: '2rem auto' }}>
             <button className="btn" style={{ marginBottom: '1rem', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={() => navigate('/')}>
-                ← Back to Dashboard
+                ← {t('back_to_dash')}
             </button>
             <div className="glass-panel" style={{ padding: '2rem', height: '600px', display: 'flex', flexDirection: 'column' }}>
-                <h2 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>📍 View Map</h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Localizing safe zones and connected user coordinates securely.</p>
+                <h2 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>📍 {t('map_title')}</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{t('map_desc')}</p>
 
                 {loading ? (
-                    <p style={{ textAlign: 'center', marginTop: 'auto', marginBottom: 'auto' }}>Retrieving GPS Coordinates...</p>
+                    <p style={{ textAlign: 'center', marginTop: 'auto', marginBottom: 'auto' }}>{t('retrieving_gps')}</p>
                 ) : (
                     <div ref={mapRef} style={{ flex: 1, borderRadius: '12px', border: '1px solid var(--border-color)', zIndex: 1 }} />
                 )}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
+import LanguageSwitcher from './components/LanguageSwitcher';
 
 // Pages
 import Login from './pages/Login';
@@ -41,6 +42,7 @@ const AdminRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <div className="app-container">
+      <LanguageSwitcher />
       <main className="main-content" style={{ padding: 0 }}>
         <Routes>
           <Route path="/login" element={<Login />} />

@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
 const Inventory: React.FC = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [items, setItems] = useState<any[]>([]);
     const [familyCount, setFamilyCount] = useState<number>(1);
     const [isLoading, setIsLoading] = useState(true);
@@ -42,14 +44,14 @@ const Inventory: React.FC = () => {
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '2rem auto' }}>
             <button className="btn" style={{ marginBottom: '1rem', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={() => navigate('/')}>
-                ← Back to Dashboard
+                ← {t('back_to_dash')}
             </button>
             <div className="glass-panel" style={{ padding: '2rem' }}>
-                <h2 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>📦 Manage Inventory</h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Automatic allocation based on family size: <strong>{familyCount} members</strong>.</p>
+                <h2 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>📦 {t('manage_inventory')}</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('recommended')} <strong>{familyCount}</strong></p>
                 
                 {isLoading ? (
-                    <p style={{ textAlign: 'center' }}>Loading supplies...</p>
+                    <p style={{ textAlign: 'center' }}>{t('loading_inventory')}</p>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                         {items.map(item => {

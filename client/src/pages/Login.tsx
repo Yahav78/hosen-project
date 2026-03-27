@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useGoogleLogin } from '@react-oauth/google';
+import { useTranslation } from 'react-i18next';
 
 const Login: React.FC = () => {
   const [identifier, setIdentifier] = useState('');
@@ -11,6 +12,7 @@ const Login: React.FC = () => {
   
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleGoogleAuth = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -48,13 +50,13 @@ const Login: React.FC = () => {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
       <div className="glass-panel" style={{ padding: '2.5rem', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--primary-color)' }}>HOSEN Login</h2>
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--primary-color)' }}>{t('app_name')} Login</h2>
         
         {error && <div style={{ color: 'white', backgroundColor: 'var(--danger-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
         
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Email or Username</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{t('email_address')} / {t('username')}</label>
             <input 
               type="text" 
               className="input-field" 
@@ -65,7 +67,7 @@ const Login: React.FC = () => {
           </div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Password</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{t('password')}</label>
             <input 
               type="password" 
               className="input-field" 
@@ -76,13 +78,13 @@ const Login: React.FC = () => {
           </div>
           
           <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} disabled={loading}>
-            {loading ? 'Authenticating...' : 'Sign In'}
+            {loading ? '...' : t('sign_in')}
           </button>
         </form>
 
         <div style={{ marginTop: '1.5rem', textAlign: 'center' }}>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                Don't have an account? <a href="/register" style={{ fontWeight: '600' }}>Register here</a>
+                {t('no_account')} <a href="/register" style={{ fontWeight: '600' }}>{t('sign_up')}</a>
             </p>
         </div>
         
@@ -104,7 +106,7 @@ const Login: React.FC = () => {
                     cursor: loading ? 'not-allowed' : 'pointer'
                 }}>
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{width: '18px'}}/>
-                {loading ? 'Authenticating...' : 'Continue with Google'}
+                {loading ? '...' : t('or_continue_with') + ' Google'}
             </button>
         </div>
       </div>

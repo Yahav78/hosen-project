@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 const FILE_URL = API_URL.replace('/api', '');
 
 const Vault: React.FC = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
     const [docs, setDocs] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [file, setFile] = useState<File | null>(null);
@@ -69,37 +71,37 @@ const Vault: React.FC = () => {
     return (
         <div style={{ padding: '2rem', maxWidth: '800px', margin: '2rem auto' }}>
             <button className="btn" style={{ marginBottom: '1rem', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={() => navigate('/')}>
-                ← Back to Dashboard
+                ← {t('back_to_dash')}
             </button>
             <div className="glass-panel" style={{ padding: '2rem' }}>
-                <h2 style={{ color: 'var(--primary-color)', marginBottom: '1rem' }}>🔒 The Vault</h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>Securely store and access your critical emergency documents.</p>
+                <h2 style={{ color: 'var(--primary-color)', marginBottom: '1rem' }}>🔒 {t('vault_title')}</h2>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('vault_desc')}</p>
 
                 {/* Upload Form */}
                 <form onSubmit={handleUpload} style={{ backgroundColor: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border-color)', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <h4 style={{ margin: 0 }}>Upload New Document</h4>
+                    <h4 style={{ margin: 0 }}>{t('upload_new_doc')}</h4>
                     <div className="grid-2">
-                        <input type="text" className="input-field" placeholder="Title (Optional)" value={title} onChange={(e) => setTitle(e.target.value)} />
+                        <input type="text" className="input-field" placeholder={t('title_optional')} value={title} onChange={(e) => setTitle(e.target.value)} />
                         <select className="input-field" value={category} onChange={(e) => setCategory(e.target.value as any)}>
                             <option value="other">Category: Other</option>
-                            <option value="id">ID Documents</option>
-                            <option value="insurance">Insurance</option>
+                            <option value="id">{t('cat_id', 'ID Documents')}</option>
+                            <option value="insurance">{t('cat_insurance', 'Insurance')}</option>
                             <option value="medical">Medical</option>
                         </select>
                     </div>
                     <div className="flex-responsive">
                         <input type="file" onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)} style={{ flex: 1, backgroundColor: 'var(--surface-color)', padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border-color)' }} required />
                         <button type="submit" className="btn btn-primary" disabled={isUploading}>
-                            {isUploading ? 'Uploading...' : 'Upload'}
+                            {isUploading ? t('uploading') : t('upload_btn')}
                         </button>
                     </div>
                 </form>
 
                 {/* Docs List */}
                 {isLoading ? (
-                    <p style={{ textAlign: 'center' }}>Loading documents...</p>
+                    <p style={{ textAlign: 'center' }}>{t('loading_docs')}</p>
                 ) : docs.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No documents saved yet.</p>
+                    <p style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>{t('no_docs')}</p>
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1rem' }}>
                         {docs.map(doc => (
@@ -111,7 +113,7 @@ const Vault: React.FC = () => {
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', alignItems: 'center' }}>
                                     <a href={`${FILE_URL}${doc.fileUrl}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 'bold' }}>
-                                        View File ↗
+                                        {t('view_file')} ↗
                                     </a>
                                     <button onClick={() => handleDelete(doc._id)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontSize: '1rem' }}>
                                         🗑
