@@ -147,7 +147,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className="glass-panel flex-responsive" style={{ padding: '1.5rem 2rem', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <img src="/logo.jpg" alt="HOSEN" style={{ height: '65px', borderRadius: '8px', flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <img src="/logo.png" alt="HOSEN" style={{ height: '65px', borderRadius: '8px', flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <div>
                 <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>{t('app_name')}</h1>
                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t('app_desc')}</p>

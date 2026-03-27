@@ -11,9 +11,10 @@ export const getInventory = async (req: Request, res: Response): Promise<void> =
             // Seed defaults
             const defaults = [
                 { userId, name: 'Mineral Water', category: 'water', quantity: 0, unit: 'Liters', factorPerPerson: 3, daysRequired: 3 },
-                { userId, name: 'Canned Food', category: 'food', quantity: 0, unit: 'Cans', factorPerPerson: 2, daysRequired: 3 },
-                { userId, name: 'First Aid Kit', category: 'medicine', quantity: 1, unit: 'kit', factorPerPerson: 0, daysRequired: 0 },
-                { userId, name: 'Battery Radio', category: 'equipment', quantity: 1, unit: 'unit', factorPerPerson: 0, daysRequired: 0 }
+                { userId, name: 'Food (Cans & Snacks)', category: 'food', quantity: 0, unit: 'Items', factorPerPerson: 3, daysRequired: 3 },
+                { userId, name: 'Personal Flashlight', category: 'equipment', quantity: 0, unit: 'Units', factorPerPerson: 1, daysRequired: 1 },
+                { userId, name: 'First Aid & Hygiene', category: 'medicine', quantity: 0, unit: 'Kits', factorPerPerson: 1, daysRequired: 1 },
+                { userId, name: 'Comm & Clothes Bag', category: 'other', quantity: 0, unit: 'Bags', factorPerPerson: 1, daysRequired: 1 }
             ];
             items = await InventoryItem.insertMany(defaults);
         }

@@ -50,7 +50,7 @@ const Login: React.FC = () => {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
       <div className="glass-panel" style={{ padding: '2.5rem', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
-        <img src="/logo.jpg" alt="JOIN HOSEN" style={{ width: '160px', marginBottom: '1.5rem', borderRadius: '8px' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+        <img src="/logo.png" alt="JOIN HOSEN" style={{ width: '160px', marginBottom: '1.5rem', borderRadius: '8px' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
         <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary-color)' }}>{t('login_title', 'Login')}</h2>
         
         {error && <div style={{ color: 'white', backgroundColor: 'var(--danger-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}

@@ -33,6 +33,7 @@ const resources = {
       "view_map": "View Map",
       "back_to_dash": "Back to Dashboard",
       // Login & Register
+      "login_title": "Login",
       "sign_in_to": "Sign in to",
       "create": "Create",
       "your_account": "your account",
@@ -121,6 +122,7 @@ const resources = {
       "view_map": "צפה במפה",
       "back_to_dash": "חזרה ללוח הבקרה",
       // Login & Register
+      "login_title": "התחברות",
       "sign_in_to": "התחבר אל",
       "create": "צור",
       "your_account": "החשבון שלך",
