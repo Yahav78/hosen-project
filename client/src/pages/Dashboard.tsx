@@ -272,11 +272,22 @@ const Dashboard: React.FC = () => {
                       <div style={{ textAlign: 'left', backgroundColor: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
                           <h4 style={{ fontSize: '0.8rem', color: 'var(--primary-color)', marginBottom: '0.5rem' }}>💡 {t('ai_advisor_tips')}</h4>
                           <ul style={{ paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.75rem', margin: 0 }}>
-                              {recommendations.map((rec, i) => (
-                                  <li key={i} style={{ color: rec.type === 'success' ? '#4ade80' : rec.type === 'warning' ? '#facc15' : '#f87171' }}>
-                                      {rec.text}
-                                  </li>
-                              ))}
+                              {recommendations.map((rec, i) => {
+                                  let localizedText = rec.text || '';
+                                  if (rec.key) {
+                                      if (rec.key === 'res_inv_low') {
+                                          const localizedItems = rec.params.items.map((it: string) => String(t('item_' + it.replace(/[^a-zA-Z]/g, '').toLowerCase(), it)));
+                                          localizedText = String(t(rec.key, { items: localizedItems.join(', ') }));
+                                      } else {
+                                          localizedText = String(t(rec.key, rec.params || {}));
+                                      }
+                                  }
+                                  return (
+                                      <li key={i} style={{ color: rec.type === 'success' ? '#4ade80' : rec.type === 'warning' ? '#facc15' : '#f87171' }}>
+                                          {localizedText}
+                                      </li>
+                                  );
+                              })}
                           </ul>
                       </div>
                   )}
