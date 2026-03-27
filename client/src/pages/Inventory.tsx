@@ -61,15 +61,15 @@ const Inventory: React.FC = () => {
                             return (
                                 <div key={item._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
                                     <div>
-                                        <h4 style={{ margin: 0 }}>{item.name}</h4>
+                                        <h4 style={{ margin: 0 }}>{String(t('item_' + item.name.replace(/[^a-zA-Z]/g, '').toLowerCase(), item.name))}</h4>
                                         <p style={{ margin: '0.2rem 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                            Required: {required > 0 ? `${required} ${item.unit}` : 'Any quantity'} | Category: {item.category}
+                                            {String(t('required_label'))}: {required > 0 ? `${required} ${String(t('unit_' + item.unit.toLowerCase(), item.unit))}` : String(t('any_quantity'))} | {String(t('category_label'))}: {String(t('cat_' + item.category.toLowerCase(), item.category))}
                                         </p>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                         {required > 0 && (
                                             <span style={{ fontSize: '0.75rem', fontWeight: 'bold', padding: '4px 8px', borderRadius: '12px', backgroundColor: isMet ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: isMet ? 'var(--success-color)' : 'var(--danger-color)' }}>
-                                                {isMet ? '✅ Stocked' : '⚠️ Low'}
+                                                {isMet ? `✅ ${t('status_stocked', 'Stocked')}` : `⚠️ ${t('status_low', 'Low')}`}
                                             </span>
                                         )}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--surface-color)', padding: '4px 8px', borderRadius: '8px' }}>
