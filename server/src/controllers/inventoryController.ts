@@ -7,16 +7,20 @@ export const getInventory = async (req: Request, res: Response): Promise<void> =
     try {
         let items = await InventoryItem.find({ userId });
 
-        if (items.length === 0) {
-            // Seed defaults
-            const defaults = [
-                { userId, name: 'Mineral Water', category: 'water', quantity: 0, unit: 'Liters', factorPerPerson: 3, daysRequired: 3 },
-                { userId, name: 'Food (Cans & Snacks)', category: 'food', quantity: 0, unit: 'Items', factorPerPerson: 3, daysRequired: 3 },
-                { userId, name: 'Personal Flashlight', category: 'equipment', quantity: 0, unit: 'Units', factorPerPerson: 1, daysRequired: 1 },
-                { userId, name: 'First Aid & Hygiene', category: 'medicine', quantity: 0, unit: 'Kits', factorPerPerson: 1, daysRequired: 1 },
-                { userId, name: 'Comm & Clothes Bag', category: 'other', quantity: 0, unit: 'Bags', factorPerPerson: 1, daysRequired: 1 }
-            ];
-            items = await InventoryItem.insertMany(defaults);
+        // Seed missing defaults unconditionally
+        const defaults = [
+            { userId, name: 'Mineral Water', category: 'water', quantity: 0, unit: 'Liters', factorPerPerson: 3, daysRequired: 3 },
+            { userId, name: 'Food (Cans & Snacks)', category: 'food', quantity: 0, unit: 'Items', factorPerPerson: 3, daysRequired: 3 },
+            { userId, name: 'Personal Flashlight', category: 'equipment', quantity: 0, unit: 'Units', factorPerPerson: 1, daysRequired: 1 },
+            { userId, name: 'First Aid & Hygiene', category: 'medicine', quantity: 0, unit: 'Kits', factorPerPerson: 1, daysRequired: 1 },
+            { userId, name: 'Comm & Clothes Bag', category: 'other', quantity: 0, unit: 'Bags', factorPerPerson: 1, daysRequired: 1 }
+        ];
+
+        const missingDefaults = defaults.filter(def => !items.some(item => item.name === def.name));
+        
+        if (missingDefaults.length > 0) {
+            const inserted = await InventoryItem.insertMany(missingDefaults);
+            items = [...items, ...inserted];
         }
 
         res.json(items);
