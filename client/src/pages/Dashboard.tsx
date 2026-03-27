@@ -11,7 +11,8 @@ const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/
 const Dashboard: React.FC = () => {
   const { user, logout, fetchProfile } = useAuth();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const logoSrc = i18n.language === 'he' ? '/logo.png' : '/logo-en.png';
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
@@ -147,7 +148,7 @@ const Dashboard: React.FC = () => {
       {/* Header */}
       <header className="glass-panel flex-responsive" style={{ padding: '1.5rem 2rem', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <img src="/logo.png" alt="HOSEN" style={{ height: '65px', borderRadius: '8px', flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <img src={logoSrc} alt="HOSEN" style={{ height: '65px', borderRadius: '8px', flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <div>
                 <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>{t('app_name')}</h1>
                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t('app_desc')}</p>
