@@ -145,10 +145,13 @@ const Dashboard: React.FC = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
-      <header className="glass-panel flex-responsive" style={{ padding: '1.5rem 2rem' }}>
-        <div>
-            <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>{t('app_name')}</h1>
-            <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t('app_desc')}</p>
+      <header className="glass-panel flex-responsive" style={{ padding: '1.5rem 2rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+            <img src="/logo.jpg" alt="HOSEN" style={{ height: '65px', borderRadius: '8px', flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
+            <div>
+                <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>{t('app_name')}</h1>
+                <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t('app_desc')}</p>
+            </div>
         </div>
         <div className="flex-responsive" style={{ gap: '1rem' }}>
             {user?.role === 'admin' && (
@@ -173,24 +176,24 @@ const Dashboard: React.FC = () => {
              
              {/* Invite Section */}
              <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                 <h3>Invite Family Member</h3>
+                 <h3>{t('invite_family')}</h3>
                  <form onSubmit={handleInvite} style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                     <input type="email" className="input-field" placeholder="Family member's email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required />
-                     <button type="submit" className="btn btn-primary">Invite</button>
+                     <input type="email" className="input-field" placeholder={t('family_email_placeholder')} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required />
+                     <button type="submit" className="btn btn-primary">{t('invite_btn')}</button>
                  </form>
              </div>
 
              {/* Pending Invitations */}
              {invitations.length > 0 && (
                  <div className="glass-panel" style={{ padding: '1.5rem', backgroundColor: 'rgba(234, 179, 8, 0.05)', border: '1px solid var(--warning-color)' }}>
-                     <h4 style={{ color: 'var(--warning-color)', marginBottom: '0.5rem' }}>Pending Invitations</h4>
+                     <h4 style={{ color: 'var(--warning-color)', marginBottom: '0.5rem' }}>{t('pending_invites')}</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                          {invitations.map((invite) => (
                              <div key={invite._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px' }}>
-                                 <span>From: <strong>{invite.senderId?.firstName} {invite.senderId?.lastName}</strong> ({invite.receiverEmail})</span>
+                                 <span>{t('from')} <strong>{invite.senderId?.firstName} {invite.senderId?.lastName}</strong> ({invite.receiverEmail})</span>
                                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                     <button className="btn" style={{ backgroundColor: 'var(--success-color)', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleRespond(invite._id, 'accepted')}>Accept</button>
-                                     <button className="btn" style={{ backgroundColor: 'var(--danger-color)', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleRespond(invite._id, 'declined')}>Decline</button>
+                                     <button className="btn" style={{ backgroundColor: 'var(--success-color)', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleRespond(invite._id, 'accepted')}>{t('accept')}</button>
+                                     <button className="btn" style={{ backgroundColor: 'var(--danger-color)', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleRespond(invite._id, 'declined')}>{t('decline')}</button>
                                  </div>
                              </div>
                          ))}
@@ -199,15 +202,15 @@ const Dashboard: React.FC = () => {
              )}
 
              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                 <h2>Family Network</h2>
+                 <h2>{t('family_network')}</h2>
                  <button className="btn btn-primary" onClick={handleImSafe} style={{ backgroundColor: 'var(--success-color)', boxShadow: '0 4px 14px 0 rgba(34, 197, 94, 0.39)' }}>
-                     I AM SAFE
+                     {t('i_am_safe')}
                  </button>
              </div>
              
              <div className="glass-panel" style={{ padding: '1.5rem' }}>
                  {familyMembers.length === 0 ? (
-                     <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>No family members connected yet. Invite someone above!</p>
+                     <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>{t('no_family')}</p>
                  ) : familyMembers.map((member) => (
                      <div key={member.user?._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -216,11 +219,11 @@ const Dashboard: React.FC = () => {
                              </div>
                              <div>
                                  <h4 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                     {member.user?.firstName || 'Unknown'} {member.user?.lastName || 'User'} {member.user?._id === user?._id ? '(You)' : ''}
+                                     {member.user?.firstName || 'Unknown'} {member.user?.lastName || 'User'} {member.user?._id === user?._id ? t('you') : ''}
                                      {member.isFavorite && <span style={{ color: 'var(--warning-color)' }}>★</span>}
                                  </h4>
                                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                                     Last Active: {member.user?.lastStatusUpdate ? new Date(member.user.lastStatusUpdate).toLocaleTimeString() : 'Never'}
+                                     {t('last_active')} {member.user?.lastStatusUpdate ? new Date(member.user.lastStatusUpdate).toLocaleTimeString() : t('never')}
                                  </p>
                              </div>
                          </div>
@@ -245,11 +248,11 @@ const Dashboard: React.FC = () => {
           {/* Sidebar */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center' }}>
-                  <h3 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Resilience Score</h3>
+                  <h3 style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('resilience_score')}</h3>
                   <div style={{ fontSize: '3rem', fontWeight: 'bold', color: 'var(--primary-color)', margin: '1rem 0' }}>
                       {user?.resilienceScore || 0}%
                   </div>
-                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>AI analysis indicates your family is well prepared.</p>
+                  <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>{t('ai_analysis')}</p>
                   
                   <button className="btn" onClick={async () => {
                       try {
@@ -261,12 +264,12 @@ const Dashboard: React.FC = () => {
                           alert(err.response?.data?.message || 'Failed to update score');
                       }
                   }} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', marginBottom: '1rem' }}>
-                      🔄 Update Score
+                      🔄 {t('update_score')}
                   </button>
 
                   {recommendations.length > 0 && (
                       <div style={{ textAlign: 'left', backgroundColor: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
-                          <h4 style={{ fontSize: '0.8rem', color: 'var(--primary-color)', marginBottom: '0.5rem' }}>💡 AI advisor tips:</h4>
+                          <h4 style={{ fontSize: '0.8rem', color: 'var(--primary-color)', marginBottom: '0.5rem' }}>💡 {t('ai_advisor_tips')}</h4>
                           <ul style={{ paddingLeft: '1.2rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.75rem', margin: 0 }}>
                               {recommendations.map((rec, i) => (
                                   <li key={i} style={{ color: rec.type === 'success' ? '#4ade80' : rec.type === 'warning' ? '#facc15' : '#f87171' }}>
@@ -279,16 +282,16 @@ const Dashboard: React.FC = () => {
               </div>
 
              <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                 <h3 style={{ marginBottom: '1rem' }}>Quick Actions</h3>
+                 <h3 style={{ marginBottom: '1rem' }}>{t('quick_actions')}</h3>
                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                      <button className="btn" onClick={() => navigate('/inventory')} style={{ width: '100%', justifyContent: 'flex-start', backgroundColor: 'var(--surface-color)', color: 'white' }}>
-                         📦 Manage Inventory
+                         📦 {t('manage_inventory')}
                      </button>
                      <button className="btn" onClick={() => navigate('/vault')} style={{ width: '100%', justifyContent: 'flex-start', backgroundColor: 'var(--surface-color)', color: 'white' }}>
-                         🔒 The Vault
+                         🔒 {t('the_vault')}
                      </button>
                      <button className="btn" onClick={() => navigate('/map')} style={{ width: '100%', justifyContent: 'flex-start', backgroundColor: 'var(--surface-color)', color: 'white' }}>
-                         📍 View Map
+                         📍 {t('view_map')}
                      </button>
                  </div>
              </div>
