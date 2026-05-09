@@ -14,6 +14,7 @@ import Inventory from './pages/Inventory';
 import Vault from './pages/Vault';
 import MapView from './pages/MapView';
 import Profile from './pages/Profile';
+import EmergencyHistory from './pages/EmergencyHistory';
 
 // Route Guards
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -57,6 +58,7 @@ function App() {
           <Route path="/vault" element={<PrivateRoute><Vault /></PrivateRoute>} />
           <Route path="/map" element={<PrivateRoute><MapView /></PrivateRoute>} />
           <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+          <Route path="/emergency-log" element={<PrivateRoute><EmergencyHistory /></PrivateRoute>} />
           
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

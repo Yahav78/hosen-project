@@ -56,6 +56,9 @@ const AppToolbar: React.FC = () => {
             <NavLink to="/map" className={baseNavClass} style={({ isActive: a }) => ({ ...linkStyle, ...(a ? activeStyle : {}) })}>
                 {t('toolbar_map')}
             </NavLink>
+            <NavLink to="/emergency-log" className={baseNavClass} style={({ isActive: a }) => ({ ...linkStyle, ...(a ? activeStyle : {}) })}>
+                {t('toolbar_emergency_log')}
+            </NavLink>
         </nav>
     );
 };

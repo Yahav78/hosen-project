@@ -3,6 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
 import io, { Socket } from 'socket.io-client';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
 export type EmergencyTrigger = 'manual' | 'audio' | 'family';
 
@@ -59,13 +62,18 @@ const Emergency: React.FC = () => {
         };
     }, [user, triggerSocketType]);
 
-    const handleImSafe = () => {
+    const handleImSafe = async () => {
         if (socketRef.current && user) {
             socketRef.current.emit('updateStatus', {
                 familyId: 'family1',
                 userId: user._id,
                 status: 'safe'
             });
+        }
+        try {
+            await axios.post(`${API_URL}/emergency-events/resolve-latest`);
+        } catch (e) {
+            console.error('resolve-latest failed:', e);
         }
         navigate('/');
     };

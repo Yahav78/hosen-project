@@ -58,6 +58,9 @@ app.use('/api/vault', vaultRoutes);
 
 import adminRoutes from './routes/adminRoutes';
 app.use('/api/admin', adminRoutes);
+
+import emergencyEventRoutes from './routes/emergencyEventRoutes';
+app.use('/api/emergency-events', emergencyEventRoutes);
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // Basic Route
