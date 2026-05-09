@@ -12,6 +12,51 @@ function familyUserIds(user: IUser): mongoose.Types.ObjectId[] {
     return [self, ...fromMembers];
 }
 
+const TITLE_MAX = 200;
+
+// @desc    Document a named emergency in the shared family log (manual entry)
+// @route   POST /api/emergency-events
+// @access  Private
+export const createManualEmergencyEvent = async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+    const raw = req.body?.title;
+    const title = typeof raw === 'string' ? raw.trim() : '';
+
+    if (!title || title.length > TITLE_MAX) {
+        res.status(400).json({
+            message: title ? `Title must be at most ${TITLE_MAX} characters` : 'Title is required'
+        });
+        return;
+    }
+
+    try {
+        let location: { lat: number; lng: number } | undefined;
+        const u = await User.findById(userId).select('location');
+        if (
+            u?.location &&
+            typeof u.location.lat === 'number' &&
+            typeof u.location.lng === 'number'
+        ) {
+            location = { lat: u.location.lat, lng: u.location.lng };
+        }
+
+        const created = await EmergencyEvent.create({
+            userId,
+            type: 'manual_trigger',
+            title,
+            location,
+            resolved: false
+        });
+
+        const populated = await EmergencyEvent.findById(created._id)
+            .populate('userId', 'firstName lastName email');
+
+        res.status(201).json(populated);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    List emergency events for me + my family network
 // @route   GET /api/emergency-events
 // @access  Private

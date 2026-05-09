@@ -10,6 +10,8 @@ export type EmergencyEventType =
 export interface IEmergencyEvent extends Document {
     userId: mongoose.Types.ObjectId;
     type: EmergencyEventType;
+    /** Optional label for manually logged events (visible to family network). */
+    title?: string;
     location?: { lat: number; lng: number };
     resolved: boolean;
     createdAt: Date;
@@ -27,7 +29,8 @@ const EmergencyEventSchema: Schema = new Schema({
         lat: { type: Number },
         lng: { type: Number }
     },
-    resolved: { type: Boolean, default: false }
+    resolved: { type: Boolean, default: false },
+    title: { type: String, trim: true, maxlength: 200 }
 }, { timestamps: true });
 
 export default mongoose.models.EmergencyEvent || mongoose.model<IEmergencyEvent>('EmergencyEvent', EmergencyEventSchema);
