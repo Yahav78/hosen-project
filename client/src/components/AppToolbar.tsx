@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 const baseNavClass = 'app-toolbar-link';
 
 const linkStyle: React.CSSProperties = {
-    padding: '0.6rem 1rem',
+    padding: '0.5rem 0.75rem',
     borderRadius: '8px',
     textDecoration: 'none',
     color: 'var(--text-secondary)',
@@ -27,17 +27,12 @@ const AppToolbar: React.FC = () => {
 
     return (
         <nav
-            className="glass-panel"
+            className="glass-panel app-toolbar-nav"
             dir={isRtl ? 'rtl' : 'ltr'}
             style={{
                 display: 'flex',
-                flexWrap: 'wrap',
                 alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                padding: '0.75rem 1rem',
-                marginBottom: '0',
-                width: '100%'
+                marginBottom: '0'
             }}
             aria-label="Main"
         >

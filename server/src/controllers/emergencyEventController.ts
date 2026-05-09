@@ -82,6 +82,84 @@ export const listEmergencyEvents = async (req: Request, res: Response): Promise<
     }
 };
 
+// @desc    Update title on my emergency event (family log)
+// @route   PATCH /api/emergency-events/:id
+// @access  Private
+export const updateEmergencyEvent = async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+    const id = String(req.params.id ?? '');
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.status(400).json({ message: 'Invalid id' });
+        return;
+    }
+
+    const raw = req.body?.title;
+    if (typeof raw !== 'string') {
+        res.status(400).json({ message: 'title must be a string' });
+        return;
+    }
+
+    const title = raw.trim();
+    if (title.length > TITLE_MAX) {
+        res.status(400).json({ message: `Title must be at most ${TITLE_MAX} characters` });
+        return;
+    }
+
+    try {
+        const ev = await EmergencyEvent.findById(id);
+        if (!ev) {
+            res.status(404).json({ message: 'Event not found' });
+            return;
+        }
+        if (String(ev.userId) !== String(userId)) {
+            res.status(403).json({ message: 'You can only edit your own events' });
+            return;
+        }
+
+        ev.title = title.length > 0 ? title : undefined;
+        await ev.save();
+
+        const populated = await EmergencyEvent.findById(ev._id).populate(
+            'userId',
+            'firstName lastName email'
+        );
+        res.json(populated);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete my emergency event from the log
+// @route   DELETE /api/emergency-events/:id
+// @access  Private
+export const deleteEmergencyEvent = async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+    const id = String(req.params.id ?? '');
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        res.status(400).json({ message: 'Invalid id' });
+        return;
+    }
+
+    try {
+        const ev = await EmergencyEvent.findById(id);
+        if (!ev) {
+            res.status(404).json({ message: 'Event not found' });
+            return;
+        }
+        if (String(ev.userId) !== String(userId)) {
+            res.status(403).json({ message: 'You can only delete your own events' });
+            return;
+        }
+
+        await EmergencyEvent.deleteOne({ _id: id });
+        res.json({ ok: true });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Mark my most recent unresolved emergency as resolved (e.g. "I'm safe")
 // @route   POST /api/emergency-events/resolve-latest
 // @access  Private

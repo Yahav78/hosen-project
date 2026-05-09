@@ -151,16 +151,25 @@ const MapView: React.FC = () => {
     }, [coords, familyMembers, t, i18n.language]);
 
     return (
-        <div style={{ padding: '1rem', maxWidth: '1000px', margin: '0 auto' }} dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="page-shell" style={{ padding: '1rem', maxWidth: '1000px', margin: '0 auto' }} dir={isRtl ? 'rtl' : 'ltr'}>
             <AppToolbar />
-            <div className="glass-panel" style={{ padding: '2rem', marginTop: '1rem', height: '600px', display: 'flex', flexDirection: 'column' }}>
+            <div className="glass-panel map-panel-container" style={{ padding: 'clamp(1rem, 4vw, 2rem)', marginTop: '1rem', display: 'flex', flexDirection: 'column' }}>
                 <h2 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>📍 {t('map_title')}</h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{t('map_desc')}</p>
 
                 {loading ? (
                     <p style={{ textAlign: 'center', marginTop: 'auto', marginBottom: 'auto' }}>{t('retrieving_gps')}</p>
                 ) : (
-                    <div ref={mapRef} style={{ flex: 1, borderRadius: '12px', border: '1px solid var(--border-color)', zIndex: 1 }} />
+                    <div
+                        ref={mapRef}
+                        style={{
+                            flex: 1,
+                            minHeight: 'min(55vh, 480px)',
+                            borderRadius: '12px',
+                            border: '1px solid var(--border-color)',
+                            zIndex: 1
+                        }}
+                    />
                 )}
             </div>
         </div>

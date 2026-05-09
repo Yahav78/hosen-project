@@ -75,9 +75,9 @@ const Vault: React.FC = () => {
     };
 
     return (
-        <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }} dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="page-shell" style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }} dir={isRtl ? 'rtl' : 'ltr'}>
             <AppToolbar />
-            <div className="glass-panel" style={{ padding: '2rem', marginTop: '1rem' }}>
+            <div className="glass-panel" style={{ padding: 'clamp(1rem, 4vw, 2rem)', marginTop: '1rem' }}>
                 <h2 style={{ color: 'var(--primary-color)', marginBottom: '1rem' }}>🔒 {t('vault_title')}</h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('vault_desc')}</p>
 

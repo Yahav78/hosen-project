@@ -49,8 +49,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh' }}>
-      <div className="glass-panel" style={{ padding: '2.5rem', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
+    <div className="page-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '1rem', boxSizing: 'border-box' }}>
+      <div className="glass-panel" style={{ padding: 'clamp(1.25rem, 5vw, 2.5rem)', width: '100%', maxWidth: '400px', textAlign: 'center' }}>
         <img src={logoSrc} alt="JOIN HOSEN" style={{ width: '160px', marginBottom: '1.5rem', borderRadius: '8px' }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
         <h2 style={{ marginBottom: '1.5rem', color: 'var(--primary-color)' }}>{t('login_title', 'Login')}</h2>
         

@@ -68,7 +68,7 @@ const AdminDashboard: React.FC = () => {
     };
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: '2rem', maxWidth: '1200px', margin: '0 auto' }} dir={i18n.language?.startsWith('he') ? 'rtl' : 'ltr'}>
+        <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: 'clamp(1rem, 4vw, 2rem)', maxWidth: '1200px', margin: '0 auto', width: '100%' }} dir={i18n.language?.startsWith('he') ? 'rtl' : 'ltr'}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                     <h1 style={{ color: 'var(--primary-color)' }}>{t('admin_title')}</h1>
@@ -79,9 +79,10 @@ const AdminDashboard: React.FC = () => {
                 </button>
             </div>
 
-            <div className="glass-panel" style={{ padding: '1.5rem', overflowX: 'auto' }}>
+            <div className="glass-panel" style={{ padding: 'clamp(1rem, 3vw, 1.5rem)' }}>
                 <h3 style={{ marginBottom: '1.5rem' }}>{t('admin_nodes_online', { count: connectedUsers.length })}</h3>
 
+                <div className="responsive-table-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'start' }}>
                     <thead>
                         <tr style={{ borderBottom: '1px solid var(--border-color)', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
@@ -128,6 +129,7 @@ const AdminDashboard: React.FC = () => {
                         ))}
                     </tbody>
                 </table>
+                </div>
             </div>
         </div>
     );

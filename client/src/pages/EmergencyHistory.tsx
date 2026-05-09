@@ -3,6 +3,8 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 import AppToolbar from '../components/AppToolbar';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
@@ -28,14 +30,27 @@ export interface EmergencyEventRow {
     createdAt: string;
 }
 
+function eventOwnerId(row: EmergencyEventRow): string {
+    const u = row.userId as unknown;
+    if (u && typeof u === 'object' && '_id' in (u as object)) {
+        return String((u as { _id: string })._id);
+    }
+    return String(u ?? '');
+}
+
 const EmergencyHistory: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { showToast } = useToast();
+    const { user } = useAuth();
     const isRtl = i18n.language?.startsWith('he');
     const [events, setEvents] = useState<EmergencyEventRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [newTitle, setNewTitle] = useState('');
     const [submitting, setSubmitting] = useState(false);
+    const [editingId, setEditingId] = useState<string | null>(null);
+    const [editTitle, setEditTitle] = useState('');
+    const [savingEditId, setSavingEditId] = useState<string | null>(null);
+    const [deleteId, setDeleteId] = useState<string | null>(null);
 
     const load = useCallback(async () => {
         setLoading(true);
@@ -98,10 +113,62 @@ const EmergencyHistory: React.FC = () => {
         return name || u.email || '—';
     };
 
+    const isMine = (row: EmergencyEventRow) => user && eventOwnerId(row) === String(user._id);
+
+    const startEdit = (row: EmergencyEventRow) => {
+        setEditingId(row._id);
+        setEditTitle(row.title?.trim() ?? '');
+    };
+
+    const cancelEdit = () => {
+        setEditingId(null);
+        setEditTitle('');
+    };
+
+    const saveEdit = async () => {
+        if (!editingId) return;
+        const trimmed = editTitle.trim();
+        setSavingEditId(editingId);
+        try {
+            await axios.patch(`${API_URL}/emergency-events/${editingId}`, { title: trimmed });
+            showToast(t('emergency_log_updated'), 'success');
+            cancelEdit();
+            await load();
+        } catch (err) {
+            console.error(err);
+            showToast(t('emergency_log_edit_error'), 'error');
+        } finally {
+            setSavingEditId(null);
+        }
+    };
+
+    const confirmDelete = async () => {
+        if (!deleteId) return;
+        try {
+            await axios.delete(`${API_URL}/emergency-events/${deleteId}`);
+            showToast(t('emergency_log_deleted'), 'success');
+            setDeleteId(null);
+            await load();
+        } catch (err) {
+            console.error(err);
+            showToast(t('emergency_log_delete_error'), 'error');
+        }
+    };
+
+    const btnSmall: React.CSSProperties = {
+        padding: '0.35rem 0.65rem',
+        fontSize: '0.8rem',
+        borderRadius: '6px',
+        border: '1px solid var(--border-color)',
+        background: 'rgba(255,255,255,0.06)',
+        color: 'var(--text-primary)',
+        cursor: 'pointer'
+    };
+
     return (
-        <div dir={isRtl ? 'rtl' : 'ltr'} lang={i18n.language} style={{ minHeight: '100vh', padding: '1rem' }}>
+        <div className="page-shell" dir={isRtl ? 'rtl' : 'ltr'} lang={i18n.language} style={{ minHeight: '100vh', padding: '1rem' }}>
             <AppToolbar />
-            <div className="glass-panel" style={{ maxWidth: 960, margin: '1rem auto', padding: '1.25rem' }}>
+            <div className="glass-panel" style={{ maxWidth: 960, margin: '1rem auto', padding: 'clamp(1rem, 3vw, 1.25rem)' }}>
                 <h1 style={{ marginTop: 0, fontSize: '1.35rem' }}>{t('emergency_log_title')}</h1>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem', fontSize: '0.95rem' }}>
                     {t('emergency_log_desc')}
@@ -156,7 +223,7 @@ const EmergencyHistory: React.FC = () => {
                 ) : events.length === 0 ? (
                     <p style={{ color: 'var(--text-secondary)', marginBottom: 0 }}>{t('emergency_log_empty')}</p>
                 ) : (
-                    <div style={{ overflowX: 'auto' }}>
+                    <div className="responsive-table-scroll">
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
                             <thead>
                                 <tr style={{ textAlign: isRtl ? 'right' : 'left', borderBottom: '1px solid var(--border-color)' }}>
@@ -166,6 +233,7 @@ const EmergencyHistory: React.FC = () => {
                                     <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_trigger')}</th>
                                     <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_location')}</th>
                                     <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_status')}</th>
+                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -176,7 +244,28 @@ const EmergencyHistory: React.FC = () => {
                                         </td>
                                         <td style={{ padding: '0.55rem 0.35rem' }}>{personLabel(row)}</td>
                                         <td style={{ padding: '0.55rem 0.35rem', fontWeight: row.title ? 600 : undefined }}>
-                                            {row.title?.trim() ? row.title.trim() : '—'}
+                                            {editingId === row._id ? (
+                                                <input
+                                                    type="text"
+                                                    value={editTitle}
+                                                    onChange={(e) => setEditTitle(e.target.value)}
+                                                    maxLength={200}
+                                                    disabled={savingEditId === row._id}
+                                                    style={{
+                                                        width: '100%',
+                                                        maxWidth: '220px',
+                                                        padding: '0.4rem 0.5rem',
+                                                        borderRadius: '6px',
+                                                        border: '1px solid var(--border-color)',
+                                                        background: 'rgba(15,23,42,0.9)',
+                                                        color: 'inherit'
+                                                    }}
+                                                />
+                                            ) : row.title?.trim() ? (
+                                                row.title.trim()
+                                            ) : (
+                                                '—'
+                                            )}
                                         </td>
                                         <td style={{ padding: '0.55rem 0.35rem' }}>{triggerLabel(row.type)}</td>
                                         <td style={{ padding: '0.55rem 0.35rem', color: 'var(--text-secondary)' }}>
@@ -187,6 +276,35 @@ const EmergencyHistory: React.FC = () => {
                                         <td style={{ padding: '0.55rem 0.35rem' }}>
                                             {row.resolved ? t('emergency_log_status_resolved') : t('emergency_log_status_active')}
                                         </td>
+                                        <td style={{ padding: '0.55rem 0.35rem', whiteSpace: 'nowrap' }}>
+                                            {isMine(row) ? (
+                                                editingId === row._id ? (
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                                                        <button type="button" style={btnSmall} onClick={saveEdit} disabled={!!savingEditId}>
+                                                            {savingEditId === row._id ? t('emergency_log_add_saving') : t('emergency_log_save_edit')}
+                                                        </button>
+                                                        <button type="button" style={btnSmall} onClick={cancelEdit} disabled={!!savingEditId}>
+                                                            {t('confirm_cancel')}
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                                                        <button type="button" style={btnSmall} onClick={() => startEdit(row)}>
+                                                            {t('emergency_log_edit')}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            style={{ ...btnSmall, borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }}
+                                                            onClick={() => setDeleteId(row._id)}
+                                                        >
+                                                            {t('emergency_log_delete')}
+                                                        </button>
+                                                    </div>
+                                                )
+                                            ) : (
+                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>—</span>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -194,6 +312,16 @@ const EmergencyHistory: React.FC = () => {
                     </div>
                 )}
             </div>
+            <ConfirmDialog
+                open={deleteId !== null}
+                title={t('emergency_log_confirm_delete_title')}
+                message={t('emergency_log_confirm_delete_message')}
+                confirmLabel={t('confirm_delete')}
+                cancelLabel={t('confirm_cancel')}
+                danger
+                onConfirm={confirmDelete}
+                onCancel={() => setDeleteId(null)}
+            />
         </div>
     );
 };

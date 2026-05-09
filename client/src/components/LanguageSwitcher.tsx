@@ -20,8 +20,9 @@ const LanguageSwitcher: React.FC = () => {
       className="btn"
       style={{
         position: 'fixed',
-        bottom: '20px',
-        right: '20px',
+        bottom: 'max(16px, env(safe-area-inset-bottom))',
+        right: 'max(16px, env(safe-area-inset-right))',
+        left: 'auto',
         zIndex: 9999,
         backgroundColor: 'var(--primary-color)',
         color: 'black',

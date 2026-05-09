@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
-import { useAudioDetection } from '../hooks/useAudioDetection';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
 import AppToolbar from '../components/AppToolbar';
@@ -25,11 +24,6 @@ const Dashboard: React.FC = () => {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [dashLoading, setDashLoading] = useState(true);
   const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
-
-  // Initialize Acoustic Emergency Detection
-  const { startListening, isListening } = useAudioDetection(() => {
-     navigate('/emergency', { state: { trigger: 'audio' } });
-  });
 
   const fetchFamily = async () => {
       try {
@@ -78,12 +72,6 @@ const Dashboard: React.FC = () => {
       newSocket.disconnect();
     };
   }, [user]);
-
-  useEffect(() => {
-     if (!isListening) {
-         startListening();
-     }
-  }, [startListening, isListening]);
 
   useEffect(() => {
       // Auto-fetch recommendations on Dashboard load cleanly
@@ -183,17 +171,17 @@ const Dashboard: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+    <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Header */}
-      <header className="glass-panel flex-responsive" style={{ padding: '1.5rem 2rem', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+      <header className="glass-panel flex-responsive dashboard-header-bar" style={{ padding: '1.5rem 2rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap', minWidth: 0 }}>
             <img src={logoSrc} alt="HOSEN" style={{ height: '65px', borderRadius: '8px', flexShrink: 0 }} onError={(e) => { e.currentTarget.style.display = 'none'; }} />
             <div>
                 <h1 style={{ margin: 0, color: 'var(--primary-color)' }}>{t('app_name')}</h1>
                 <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{t('app_desc')}</p>
             </div>
         </div>
-        <div className="flex-responsive" style={{ gap: '1rem' }}>
+        <div className="flex-responsive dashboard-actions" style={{ gap: '1rem' }}>
             {user?.role === 'admin' && (
                 <button type="button" className="btn" style={{ backgroundColor: 'var(--warning-color)', color: 'black' }} onClick={() => navigate('/admin')}>
                     {t('admin_panel')}
@@ -219,7 +207,7 @@ const Dashboard: React.FC = () => {
              {/* Invite Section */}
              <div className="glass-panel" style={{ padding: '1.5rem' }}>
                  <h3>{t('invite_family')}</h3>
-                 <form onSubmit={handleInvite} style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                 <form onSubmit={handleInvite} className="dashboard-invite-form" style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                      <input type="email" className="input-field" placeholder={t('family_email_placeholder')} value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} required />
                      <button type="submit" className="btn btn-primary">{t('invite_btn')}</button>
                  </form>
@@ -231,9 +219,9 @@ const Dashboard: React.FC = () => {
                      <h4 style={{ color: 'var(--warning-color)', marginBottom: '0.5rem' }}>{t('pending_invites')}</h4>
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                          {invitations.map((invite) => (
-                             <div key={invite._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px' }}>
-                                 <span>{t('from')} <strong>{invite.senderId?.firstName} {invite.senderId?.lastName}</strong> ({invite.receiverEmail})</span>
-                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
+                             <div key={invite._id} className="dashboard-pending-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '8px' }}>
+                                 <span style={{ wordBreak: 'break-word' }}>{t('from')} <strong>{invite.senderId?.firstName} {invite.senderId?.lastName}</strong> ({invite.receiverEmail})</span>
+                                 <div className="dashboard-pending-actions" style={{ display: 'flex', gap: '0.5rem' }}>
                                      <button className="btn" style={{ backgroundColor: 'var(--success-color)', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleRespond(invite._id, 'accepted')}>{t('accept')}</button>
                                      <button className="btn" style={{ backgroundColor: 'var(--danger-color)', color: 'white', padding: '0.25rem 0.5rem', fontSize: '0.8rem' }} onClick={() => handleRespond(invite._id, 'declined')}>{t('decline')}</button>
                                  </div>
@@ -243,8 +231,8 @@ const Dashboard: React.FC = () => {
                  </div>
              )}
 
-             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                 <h2>{t('family_network')}</h2>
+             <div className="dashboard-family-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                 <h2 style={{ margin: 0 }}>{t('family_network')}</h2>
                  <button className="btn btn-primary" onClick={handleImSafe} style={{ backgroundColor: 'var(--success-color)', boxShadow: '0 4px 14px 0 rgba(34, 197, 94, 0.39)' }}>
                      {t('i_am_safe')}
                  </button>
@@ -256,8 +244,8 @@ const Dashboard: React.FC = () => {
                  ) : familyMembers.length === 0 ? (
                      <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>{t('no_family')}</p>
                  ) : familyMembers.map((member) => (
-                     <div key={member.user?._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                     <div key={member.user?._id} className="dashboard-member-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', minWidth: 0 }}>
                              <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: member.isFavorite ? 'rgba(234, 179, 8, 0.2)' : 'var(--surface-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', border: member.isFavorite ? '1px solid var(--warning-color)' : '1px solid var(--border-color)' }}>
                                  {member.user?.firstName?.charAt(0) || '?'}{member.user?.lastName?.charAt(0) || '?'}
                              </div>
@@ -271,7 +259,7 @@ const Dashboard: React.FC = () => {
                                  </p>
                              </div>
                          </div>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                         <div className="dashboard-member-meta" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
                              <StatusBadge status={member.user?.status} />
                              {member.user?._id !== user?._id && (
                                  <>

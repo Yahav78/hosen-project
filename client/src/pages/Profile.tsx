@@ -19,10 +19,8 @@ const Profile: React.FC = () => {
 
     const row = (label: string, value: React.ReactNode) => (
         <div
+            className="profile-field-row"
             style={{
-                display: 'grid',
-                gridTemplateColumns: 'minmax(120px, 1fr) 2fr',
-                gap: '0.75rem',
                 padding: '0.75rem 0',
                 borderBottom: '1px solid var(--border-color)',
                 alignItems: 'start'
@@ -34,9 +32,9 @@ const Profile: React.FC = () => {
     );
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }} dir={isRtl ? 'rtl' : 'ltr'}>
+        <div className="page-shell" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', padding: '1rem' }} dir={isRtl ? 'rtl' : 'ltr'}>
             <AppToolbar />
-            <div className="glass-panel" style={{ padding: '2rem', maxWidth: '640px', margin: '0 auto', width: '100%' }}>
+            <div className="glass-panel" style={{ padding: 'clamp(1rem, 4vw, 2rem)', maxWidth: '640px', margin: '0 auto', width: '100%' }}>
                 <h2 style={{ color: 'var(--primary-color)', marginTop: 0, marginBottom: '1.5rem' }}>{t('profile_title')}</h2>
                 {row(t('first_name'), user.firstName)}
                 {row(t('last_name'), user.lastName)}

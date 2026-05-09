@@ -60,19 +60,19 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem 0' }}>
-      <div className="glass-panel" style={{ padding: '2.5rem', width: '100%', maxWidth: '500px' }}>
+    <div className="page-shell" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '1rem', boxSizing: 'border-box' }}>
+      <div className="glass-panel" style={{ padding: 'clamp(1.25rem, 5vw, 2.5rem)', width: '100%', maxWidth: '500px' }}>
         <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--primary-color)' }}>{t('register_join', { app: t('app_name') })}</h2>
 
         {error && <div style={{ color: 'white', backgroundColor: 'var(--danger-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', gap: '1rem' }}>
-              <div style={{ flex: 1 }}>
+          <div className="grid-2">
+              <div style={{ minWidth: 0 }}>
                 <label htmlFor="reg-firstName" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{t('first_name')}</label>
                 <input id="reg-firstName" type="text" className="input-field" name="firstName" value={formData.firstName} onChange={handleChange} required autoComplete="given-name" />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ minWidth: 0 }}>
                 <label htmlFor="reg-lastName" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>{t('last_name')}</label>
                 <input id="reg-lastName" type="text" className="input-field" name="lastName" value={formData.lastName} onChange={handleChange} required autoComplete="family-name" />
               </div>
