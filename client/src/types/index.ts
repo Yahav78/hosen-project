@@ -4,6 +4,7 @@ export interface User {
     lastName: string;
     username: string;
     email: string;
+    homeAddress?: string;
     role: string;
     profileCompleted: boolean;
     status: string;

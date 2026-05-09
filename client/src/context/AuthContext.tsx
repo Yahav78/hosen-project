@@ -23,20 +23,28 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
+/** Must run synchronously before navigate() — child useEffects can run before parent AuthProvider's token effect. */
+export function syncAxiosAuthHeader(token: string | null): void {
+    if (token) {
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+        delete axios.defaults.headers.common['Authorization'];
+    }
+}
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(localStorage.getItem('token'));
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Setup axios default
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchProfile();
+        syncAxiosAuthHeader(token);
+        fetchProfile();
     } else {
-      delete axios.defaults.headers.common['Authorization'];
-      setIsLoading(false);
+        syncAxiosAuthHeader(null);
+        setIsLoading(false);
     }
   }, [token]);
 
@@ -56,9 +64,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (credentials: LoginCredentials) => {
     try {
         const res = await axios.post(`${API_URL}/auth/login`, credentials);
+        const newToken = res.data.token as string;
+        syncAxiosAuthHeader(newToken);
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
         setUser(res.data);
-        setToken(res.data.token);
-        localStorage.setItem('token', res.data.token);
         setIsAuthenticated(true);
     } catch(err: unknown) {
         if (axios.isAxiosError(err)) {
@@ -71,9 +81,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const register = async (credentials: RegisterCredentials) => {
       try {
         const res = await axios.post(`${API_URL}/auth/register`, credentials);
+        const newToken = res.data.token as string;
+        syncAxiosAuthHeader(newToken);
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
         setUser(res.data);
-        setToken(res.data.token);
-        localStorage.setItem('token', res.data.token);
         setIsAuthenticated(true);
       } catch(err: unknown) {
         if (axios.isAxiosError(err)) {
@@ -86,9 +98,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const googleLogin = async (googleToken: string) => {
       try {
         const res = await axios.post(`${API_URL}/auth/google`, { token: googleToken });
+        const newToken = res.data.token as string;
+        syncAxiosAuthHeader(newToken);
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
         setUser(res.data);
-        setToken(res.data.token);
-        localStorage.setItem('token', res.data.token);
         setIsAuthenticated(true);
       } catch(err: unknown) {
           if (axios.isAxiosError(err)) {
@@ -115,7 +129,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setToken(null);
     setIsAuthenticated(false);
     localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
+    syncAxiosAuthHeader(null);
   };
 
   return (

@@ -5,6 +5,10 @@ import io from 'socket.io-client';
 import { useAudioDetection } from '../hooks/useAudioDetection';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import AppToolbar from '../components/AppToolbar';
+import { useToast } from '../context/ToastContext';
+import ConfirmDialog from '../components/ConfirmDialog';
+import SkeletonList from '../components/SkeletonList';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
@@ -12,17 +16,19 @@ const Dashboard: React.FC = () => {
   const { user, logout, fetchProfile } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { showToast } = useToast();
   const logoSrc = i18n.language === 'he' ? '/logo.png' : '/logo-en.png';
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [inviteEmail, setInviteEmail] = useState('');
   const [socket, setSocket] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [dashLoading, setDashLoading] = useState(true);
+  const [removeMemberId, setRemoveMemberId] = useState<string | null>(null);
 
   // Initialize Acoustic Emergency Detection
   const { startListening, isListening } = useAudioDetection(() => {
-     console.log('Alarms Detected - Auto Triggering Emergency');
-     navigate('/emergency');
+     navigate('/emergency', { state: { trigger: 'audio' } });
   });
 
   const fetchFamily = async () => {
@@ -44,14 +50,31 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    // Initialize Socket.io
     const newSocket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
     setSocket(newSocket);
 
-    fetchFamily();
-    fetchInvitations();
+    let cancelled = false;
+    const load = async () => {
+      setDashLoading(true);
+      try {
+        const [fam, inv] = await Promise.all([
+          axios.get(`${API_URL}/family`),
+          axios.get(`${API_URL}/family/invitations`)
+        ]);
+        if (!cancelled) {
+          setFamilyMembers(fam.data);
+          setInvitations(inv.data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (!cancelled) setDashLoading(false);
+      }
+    };
+    load();
 
     return () => {
+      cancelled = true;
       newSocket.disconnect();
     };
   }, [user]);
@@ -92,10 +115,10 @@ const Dashboard: React.FC = () => {
       if (!inviteEmail) return;
       try {
           await axios.post(`${API_URL}/family/invite`, { email: inviteEmail });
-          alert('Invitation sent successfully!');
+          showToast(t('toast_invite_sent'), 'success');
           setInviteEmail('');
       } catch (err: any) {
-          alert(err.response?.data?.message || 'Failed to send invitation');
+          showToast(err.response?.data?.message || t('toast_invite_error'), 'error');
       }
   };
 
@@ -106,17 +129,20 @@ const Dashboard: React.FC = () => {
           if (action === 'accepted') fetchFamily();
       } catch (err: any) {
           console.error(err);
-          alert(err.response?.data?.message || 'Failed to respond to invitation');
+          showToast(err.response?.data?.message || t('toast_invite_respond_error'), 'error');
       }
   };
 
-  const handleRemove = async (id: string) => {
-      if (!confirm("Are you sure you want to remove this family member?")) return;
+  const confirmRemoveMember = async () => {
+      if (!removeMemberId) return;
       try {
-          await axios.delete(`${API_URL}/family/${id}`);
-          fetchFamily();
+          await axios.delete(`${API_URL}/family/${removeMemberId}`);
+          await fetchFamily();
+          showToast(t('toast_family_removed'), 'success');
       } catch (err) {
           console.error(err);
+      } finally {
+          setRemoveMemberId(null);
       }
   };
 
@@ -131,14 +157,14 @@ const Dashboard: React.FC = () => {
 
   const StatusBadge = ({ status }: { status: string }) => {
     let color = 'var(--text-secondary)';
-    let text = 'UNKNOWN';
+    let text = t('status_unknown');
     
     if (status === 'safe') {
         color = 'var(--success-color)';
-        text = 'SAFE';
+        text = t('status_safe');
     } else if (status === 'in-danger') {
         color = 'var(--danger-color)';
-        text = 'IN DANGER';
+        text = t('status_in_danger');
     }
 
     return (
@@ -169,18 +195,20 @@ const Dashboard: React.FC = () => {
         </div>
         <div className="flex-responsive" style={{ gap: '1rem' }}>
             {user?.role === 'admin' && (
-                <button className="btn" style={{ backgroundColor: 'var(--warning-color)', color: 'black' }} onClick={() => window.location.href='/admin'}>
+                <button type="button" className="btn" style={{ backgroundColor: 'var(--warning-color)', color: 'black' }} onClick={() => navigate('/admin')}>
                     {t('admin_panel')}
                 </button>
             )}
-            <button className="btn btn-danger" onClick={() => window.location.href='/emergency'}>
+            <button type="button" className="btn btn-danger" onClick={() => navigate('/emergency', { state: { trigger: 'manual' } })}>
                 {t('emergency_override')}
             </button>
-            <button className="btn" style={{ backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={logout}>
+            <button type="button" className="btn" style={{ backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={logout}>
                 {t('sign_out')}
             </button>
         </div>
       </header>
+
+      <AppToolbar />
 
       {/* Main Content Grid */}
       <div className="grid-sidebar">
@@ -223,7 +251,9 @@ const Dashboard: React.FC = () => {
              </div>
              
              <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                 {familyMembers.length === 0 ? (
+                 {dashLoading ? (
+                     <SkeletonList rows={4} label={t('dashboard_loading_network')} />
+                 ) : familyMembers.length === 0 ? (
                      <p style={{ color: 'var(--text-secondary)', textAlign: 'center' }}>{t('no_family')}</p>
                  ) : familyMembers.map((member) => (
                      <div key={member.user?._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderBottom: '1px solid var(--border-color)' }}>
@@ -248,7 +278,7 @@ const Dashboard: React.FC = () => {
                                      <button onClick={() => handleFavorite(member.user?._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: member.isFavorite ? 'var(--warning-color)' : 'var(--text-secondary)', fontSize: '1.2rem' }}>
                                          ★
                                      </button>
-                                     <button onClick={() => handleRemove(member.user?._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger-color)', fontSize: '1.2rem' }}>
+                                     <button type="button" aria-label={t('confirm_remove')} onClick={() => member.user?._id && setRemoveMemberId(member.user._id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger-color)', fontSize: '1.2rem' }}>
                                          🗑
                                      </button>
                                  </>
@@ -268,14 +298,14 @@ const Dashboard: React.FC = () => {
                   </div>
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>{t('ai_analysis')}</p>
                   
-                  <button className="btn" onClick={async () => {
+                  <button type="button" className="btn" onClick={async () => {
                       try {
                           const res = await axios.post(`${API_URL}/resilience/calculate`);
                           setRecommendations(res.data.recommendations || []);
-                          fetchProfile(); // Update score live!
-                          alert(`Score updated to ${res.data.score}%`);
+                          fetchProfile();
+                          showToast(String(t('toast_score_updated', { score: res.data.score })), 'success');
                       } catch (err: any) {
-                          alert(err.response?.data?.message || 'Failed to update score');
+                          showToast(err.response?.data?.message || t('toast_score_error'), 'error');
                       }
                   }} style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid var(--border-color)', color: 'white', marginBottom: '1rem' }}>
                       🔄 {t('update_score')}
@@ -306,23 +336,20 @@ const Dashboard: React.FC = () => {
                   )}
               </div>
 
-             <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                 <h3 style={{ marginBottom: '1rem' }}>{t('quick_actions')}</h3>
-                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                     <button className="btn" onClick={() => navigate('/inventory')} style={{ width: '100%', justifyContent: 'flex-start', backgroundColor: 'var(--surface-color)', color: 'white' }}>
-                         📦 {t('manage_inventory')}
-                     </button>
-                     <button className="btn" onClick={() => navigate('/vault')} style={{ width: '100%', justifyContent: 'flex-start', backgroundColor: 'var(--surface-color)', color: 'white' }}>
-                         🔒 {t('the_vault')}
-                     </button>
-                     <button className="btn" onClick={() => navigate('/map')} style={{ width: '100%', justifyContent: 'flex-start', backgroundColor: 'var(--surface-color)', color: 'white' }}>
-                         📍 {t('view_map')}
-                     </button>
-                 </div>
-             </div>
           </div>
 
       </div>
+
+      <ConfirmDialog
+        open={removeMemberId !== null}
+        title={t('confirm_remove_family_title')}
+        message={t('confirm_remove_family_message')}
+        confirmLabel={t('confirm_remove')}
+        cancelLabel={t('confirm_cancel')}
+        danger
+        onConfirm={confirmRemoveMember}
+        onCancel={() => setRemoveMemberId(null)}
+      />
     </div>
   );
 };

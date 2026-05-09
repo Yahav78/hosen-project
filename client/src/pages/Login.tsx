@@ -29,7 +29,7 @@ const Login: React.FC = () => {
         }
     },
     onError: () => {
-        setError('Google Login was unsuccessful.');
+        setError(t('google_auth_failed'));
     }
   });
 
@@ -80,7 +80,7 @@ const Login: React.FC = () => {
           </div>
           
           <button type="submit" className="btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} disabled={loading}>
-            {loading ? '...' : t('sign_in')}
+            {loading ? t('loading_submit') : t('sign_in')}
           </button>
         </form>
 
@@ -108,7 +108,7 @@ const Login: React.FC = () => {
                     cursor: loading ? 'not-allowed' : 'pointer'
                 }}>
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{width: '18px'}}/>
-                {loading ? '...' : t('or_continue_with') + ' Google'}
+                {loading ? t('loading_submit') : `${t('or_continue_with')} Google`}
             </button>
         </div>
       </div>

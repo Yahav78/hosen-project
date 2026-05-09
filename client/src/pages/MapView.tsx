@@ -1,14 +1,22 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import io from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
+import AppToolbar from '../components/AppToolbar';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
+function escapeHtml(s: string): string {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
+
 const MapView: React.FC = () => {
-    const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const isRtl = i18n.language?.startsWith('he');
     const mapRef = useRef<HTMLDivElement>(null);
     const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [familyMembers, setFamilyMembers] = useState<any[]>([]);
@@ -107,7 +115,7 @@ const MapView: React.FC = () => {
              if (!leafletMapRef.current) {
                  leafletMapRef.current = L.map(mapRef.current).setView([coords.lat, coords.lng], 13);
                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                     attribution: '&copy; OpenStreetMap contributors'
+                     attribution: t('map_osm_attrib')
                  }).addTo(leafletMapRef.current);
              } else {
                  leafletMapRef.current.setView([coords.lat, coords.lng]);
@@ -130,7 +138,8 @@ const MapView: React.FC = () => {
              // 2. Add Family Markers
              familyMembers.forEach((member: any) => {
                   if (member.location && member.location.lat && member.location.lng) {
-                       const tooltip = `<b>${member.firstName} ${member.lastName}</b><br>Status: ${member.status?.toUpperCase()}`;
+                       const statusLbl = escapeHtml(t('map_popup_status'));
+                       const tooltip = `<b>${escapeHtml(member.firstName)} ${escapeHtml(member.lastName)}</b><br>${statusLbl}: ${escapeHtml(String(member.status || ''))}`;
                        L.marker([member.location.lat, member.location.lng])
                            .addTo(map)
                            .bindPopup(tooltip);
@@ -139,14 +148,12 @@ const MapView: React.FC = () => {
         };
 
         loadLeaflet();
-    }, [coords, familyMembers]);
+    }, [coords, familyMembers, t, i18n.language]);
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '1000px', margin: '2rem auto' }}>
-            <button className="btn" style={{ marginBottom: '1rem', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={() => navigate('/')}>
-                ← {t('back_to_dash')}
-            </button>
-            <div className="glass-panel" style={{ padding: '2rem', height: '600px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '1rem', maxWidth: '1000px', margin: '0 auto' }} dir={isRtl ? 'rtl' : 'ltr'}>
+            <AppToolbar />
+            <div className="glass-panel" style={{ padding: '2rem', marginTop: '1rem', height: '600px', display: 'flex', flexDirection: 'column' }}>
                 <h2 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>📍 {t('map_title')}</h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{t('map_desc')}</p>
 

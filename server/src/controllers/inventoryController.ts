@@ -29,6 +29,31 @@ export const getInventory = async (req: Request, res: Response): Promise<void> =
     }
 };
 
+export const setItemQuantity = async (req: Request, res: Response): Promise<void> => {
+    const userId = (req as any).user.id;
+    const { id } = req.params;
+    const raw = req.body?.quantity;
+    const quantity = typeof raw === 'number' ? raw : parseInt(String(raw), 10);
+
+    if (Number.isNaN(quantity) || quantity < 0) {
+        res.status(400).json({ message: 'Invalid quantity' });
+        return;
+    }
+
+    try {
+        const item = await InventoryItem.findById(id);
+        if (!item || String(item.userId) !== String(userId)) {
+            res.status(404).json({ message: 'Item not found' });
+            return;
+        }
+        item.quantity = quantity;
+        await item.save();
+        res.json(item);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 export const updateItemQuantity = async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const { action } = req.body; // 'increment' | 'decrement'

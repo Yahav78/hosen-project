@@ -8,7 +8,8 @@
     "start": "node dist/src/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "seed": "ts-node scripts/seed-admin.ts"
+    "seed": "ts-node scripts/seed-admin.ts",
+    "seed:test": "ts-node scripts/seed-test-user.ts"
   },
   "keywords": [],
   "author": "",

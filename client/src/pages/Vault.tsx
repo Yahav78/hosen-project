@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
+import AppToolbar from '../components/AppToolbar';
+import { useToast } from '../context/ToastContext';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 const FILE_URL = API_URL.replace('/api', '');
 
 const Vault: React.FC = () => {
-    const navigate = useNavigate();
-    const { t } = useTranslation();
+    const { t, i18n } = useTranslation();
+    const { showToast } = useToast();
+    const isRtl = i18n.language?.startsWith('he');
+    const [deleteDocId, setDeleteDocId] = useState<string | null>(null);
     const [docs, setDocs] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [file, setFile] = useState<File | null>(null);
@@ -46,34 +50,34 @@ const Vault: React.FC = () => {
              await axios.post(`${API_URL}/vault/upload`, formData, {
                   headers: { 'Content-Type': 'multipart/form-data' }
              });
-             alert('Document uploaded successfully!');
+             showToast(t('vault_upload_ok'), 'success');
              setFile(null);
              setTitle('');
              fetchDocs();
          } catch (err) {
               console.error("Upload failed:", err);
-              alert('Upload failed');
+              showToast(t('vault_upload_fail'), 'error');
          } finally {
               setIsUploading(false);
          }
     };
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this document?")) return;
+    const confirmDeleteDoc = async () => {
+        if (!deleteDocId) return;
         try {
-            await axios.delete(`${API_URL}/vault/${id}`);
+            await axios.delete(`${API_URL}/vault/${deleteDocId}`);
             fetchDocs();
         } catch (err) {
             console.error("Delete failed:", err);
+        } finally {
+            setDeleteDocId(null);
         }
     };
 
     return (
-        <div style={{ padding: '2rem', maxWidth: '800px', margin: '2rem auto' }}>
-            <button className="btn" style={{ marginBottom: '1rem', backgroundColor: 'transparent', border: '1px solid var(--border-color)', color: 'white' }} onClick={() => navigate('/')}>
-                ← {t('back_to_dash')}
-            </button>
-            <div className="glass-panel" style={{ padding: '2rem' }}>
+        <div style={{ padding: '1rem', maxWidth: '800px', margin: '0 auto' }} dir={isRtl ? 'rtl' : 'ltr'}>
+            <AppToolbar />
+            <div className="glass-panel" style={{ padding: '2rem', marginTop: '1rem' }}>
                 <h2 style={{ color: 'var(--primary-color)', marginBottom: '1rem' }}>🔒 {t('vault_title')}</h2>
                 <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{t('vault_desc')}</p>
 
@@ -115,7 +119,7 @@ const Vault: React.FC = () => {
                                     <a href={`${FILE_URL}${doc.fileUrl}`} target="_blank" rel="noreferrer" style={{ color: 'var(--primary-color)', textDecoration: 'none', fontSize: '0.875rem', fontWeight: 'bold' }}>
                                         {t('view_file')} ↗
                                     </a>
-                                    <button onClick={() => handleDelete(doc._id)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontSize: '1rem' }}>
+                                    <button type="button" aria-label={t('confirm_delete')} onClick={() => setDeleteDocId(doc._id)} style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', fontSize: '1rem' }}>
                                         🗑
                                     </button>
                                 </div>
@@ -124,6 +128,17 @@ const Vault: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            <ConfirmDialog
+                open={deleteDocId !== null}
+                title={t('confirm_delete_doc_title')}
+                message={t('confirm_delete_doc_message')}
+                confirmLabel={t('confirm_delete')}
+                cancelLabel={t('confirm_cancel')}
+                danger
+                onConfirm={confirmDeleteDoc}
+                onCancel={() => setDeleteDocId(null)}
+            />
         </div>
     );
 };
