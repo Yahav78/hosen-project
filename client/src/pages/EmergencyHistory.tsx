@@ -38,6 +38,18 @@ function eventOwnerId(row: EmergencyEventRow): string {
     return String(u ?? '');
 }
 
+function TimeTwoLines({ iso, lang }: { iso: string; lang: string }) {
+    const d = new Date(iso);
+    return (
+        <div style={{ lineHeight: 1.35 }}>
+            <span style={{ display: 'block' }}>{d.toLocaleDateString(lang)}</span>
+            <span style={{ display: 'block', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                {d.toLocaleTimeString(lang)}
+            </span>
+        </div>
+    );
+}
+
 const EmergencyHistory: React.FC = () => {
     const { t, i18n } = useTranslation();
     const { showToast } = useToast();
@@ -223,27 +235,141 @@ const EmergencyHistory: React.FC = () => {
                 ) : events.length === 0 ? (
                     <p style={{ color: 'var(--text-secondary)', marginBottom: 0 }}>{t('emergency_log_empty')}</p>
                 ) : (
-                    <div className="responsive-table-scroll">
-                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
-                            <thead>
-                                <tr style={{ textAlign: isRtl ? 'right' : 'left', borderBottom: '1px solid var(--border-color)' }}>
-                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_time')}</th>
-                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_user')}</th>
-                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_event_name')}</th>
-                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_trigger')}</th>
-                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_location')}</th>
-                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_status')}</th>
-                                    <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {events.map((row) => (
-                                    <tr key={row._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                                        <td style={{ padding: '0.55rem 0.35rem', whiteSpace: 'nowrap' }}>
-                                            {new Date(row.createdAt).toLocaleString(i18n.language)}
-                                        </td>
-                                        <td style={{ padding: '0.55rem 0.35rem' }}>{personLabel(row)}</td>
-                                        <td style={{ padding: '0.55rem 0.35rem', fontWeight: row.title ? 600 : undefined }}>
+                    <>
+                        <div className="responsive-table-scroll emergency-log-desktop-wrap">
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9rem' }}>
+                                <thead>
+                                    <tr style={{ textAlign: isRtl ? 'right' : 'left', borderBottom: '1px solid var(--border-color)' }}>
+                                        <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_time')}</th>
+                                        <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_user')}</th>
+                                        <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_event_name')}</th>
+                                        <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_trigger')}</th>
+                                        <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_location')}</th>
+                                        <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_status')}</th>
+                                        <th style={{ padding: '0.5rem 0.35rem' }}>{t('emergency_log_col_actions')}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {events.map((row) => (
+                                        <tr key={row._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                                            <td style={{ padding: '0.55rem 0.35rem', verticalAlign: 'top' }}>
+                                                <TimeTwoLines iso={row.createdAt} lang={i18n.language} />
+                                            </td>
+                                            <td style={{ padding: '0.55rem 0.35rem' }}>{personLabel(row)}</td>
+                                            <td style={{ padding: '0.55rem 0.35rem', fontWeight: row.title ? 600 : undefined }}>
+                                                {editingId === row._id ? (
+                                                    <input
+                                                        type="text"
+                                                        value={editTitle}
+                                                        onChange={(e) => setEditTitle(e.target.value)}
+                                                        maxLength={200}
+                                                        disabled={savingEditId === row._id}
+                                                        style={{
+                                                            width: '100%',
+                                                            maxWidth: '220px',
+                                                            padding: '0.4rem 0.5rem',
+                                                            borderRadius: '6px',
+                                                            border: '1px solid var(--border-color)',
+                                                            background: 'rgba(15,23,42,0.9)',
+                                                            color: 'inherit'
+                                                        }}
+                                                    />
+                                                ) : row.title?.trim() ? (
+                                                    row.title.trim()
+                                                ) : (
+                                                    '—'
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '0.55rem 0.35rem' }}>{triggerLabel(row.type)}</td>
+                                            <td style={{ padding: '0.55rem 0.35rem', color: 'var(--text-secondary)' }}>
+                                                {row.location?.lat != null && row.location?.lng != null
+                                                    ? t('emergency_log_location_yes')
+                                                    : t('emergency_log_location_no')}
+                                            </td>
+                                            <td style={{ padding: '0.55rem 0.35rem' }}>
+                                                {row.resolved ? t('emergency_log_status_resolved') : t('emergency_log_status_active')}
+                                            </td>
+                                            <td style={{ padding: '0.55rem 0.35rem', whiteSpace: 'nowrap' }}>
+                                                {isMine(row) ? (
+                                                    editingId === row._id ? (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                                                            <button type="button" style={btnSmall} onClick={saveEdit} disabled={!!savingEditId}>
+                                                                {savingEditId === row._id ? t('emergency_log_add_saving') : t('emergency_log_save_edit')}
+                                                            </button>
+                                                            <button type="button" style={btnSmall} onClick={cancelEdit} disabled={!!savingEditId}>
+                                                                {t('confirm_cancel')}
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                                                            <button type="button" style={btnSmall} onClick={() => startEdit(row)}>
+                                                                {t('emergency_log_edit')}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                style={{ ...btnSmall, borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }}
+                                                                onClick={() => setDeleteId(row._id)}
+                                                            >
+                                                                {t('emergency_log_delete')}
+                                                            </button>
+                                                        </div>
+                                                    )
+                                                ) : (
+                                                    <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>—</span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="emergency-log-mobile-cards">
+                            {events.map((row) => (
+                                <div key={`m-${row._id}`} className="emergency-log-card">
+                                    {isMine(row) && (
+                                        <div
+                                            style={{
+                                                display: 'flex',
+                                                flexWrap: 'wrap',
+                                                gap: '0.5rem',
+                                                marginBottom: '0.75rem',
+                                                paddingBottom: '0.65rem',
+                                                borderBottom: '1px solid rgba(255,255,255,0.08)'
+                                            }}
+                                        >
+                                            {editingId === row._id ? (
+                                                <>
+                                                    <button type="button" className="btn btn-primary" style={{ flex: '1 1 120px', padding: '0.45rem 0.75rem', fontSize: '0.85rem' }} onClick={saveEdit} disabled={!!savingEditId}>
+                                                        {savingEditId === row._id ? t('emergency_log_add_saving') : t('emergency_log_save_edit')}
+                                                    </button>
+                                                    <button type="button" className="btn" style={{ flex: '1 1 120px', padding: '0.45rem 0.75rem', fontSize: '0.85rem', background: 'rgba(255,255,255,0.08)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }} onClick={cancelEdit} disabled={!!savingEditId}>
+                                                        {t('confirm_cancel')}
+                                                    </button>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <button type="button" className="btn btn-primary" style={{ flex: '1 1 120px', padding: '0.45rem 0.75rem', fontSize: '0.85rem' }} onClick={() => startEdit(row)}>
+                                                        {t('emergency_log_edit')}
+                                                    </button>
+                                                    <button type="button" className="btn btn-danger" style={{ flex: '1 1 120px', padding: '0.45rem 0.75rem', fontSize: '0.85rem' }} onClick={() => setDeleteId(row._id)}>
+                                                        {t('emergency_log_delete')}
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    )}
+                                    <div style={{ marginBottom: '0.55rem' }}>
+                                        <div className="emergency-log-card-label">{t('emergency_log_col_time')}</div>
+                                        <TimeTwoLines iso={row.createdAt} lang={i18n.language} />
+                                    </div>
+                                    <div style={{ marginBottom: '0.55rem' }}>
+                                        <div className="emergency-log-card-label">{t('emergency_log_col_user')}</div>
+                                        <div style={{ fontSize: '0.92rem' }}>{personLabel(row)}</div>
+                                    </div>
+                                    <div style={{ marginBottom: '0.55rem' }}>
+                                        <div className="emergency-log-card-label">{t('emergency_log_col_event_name')}</div>
+                                        <div style={{ fontSize: '0.92rem', fontWeight: row.title ? 600 : undefined }}>
                                             {editingId === row._id ? (
                                                 <input
                                                     type="text"
@@ -253,12 +379,12 @@ const EmergencyHistory: React.FC = () => {
                                                     disabled={savingEditId === row._id}
                                                     style={{
                                                         width: '100%',
-                                                        maxWidth: '220px',
-                                                        padding: '0.4rem 0.5rem',
+                                                        padding: '0.45rem 0.55rem',
                                                         borderRadius: '6px',
                                                         border: '1px solid var(--border-color)',
                                                         background: 'rgba(15,23,42,0.9)',
-                                                        color: 'inherit'
+                                                        color: 'inherit',
+                                                        boxSizing: 'border-box'
                                                     }}
                                                 />
                                             ) : row.title?.trim() ? (
@@ -266,50 +392,30 @@ const EmergencyHistory: React.FC = () => {
                                             ) : (
                                                 '—'
                                             )}
-                                        </td>
-                                        <td style={{ padding: '0.55rem 0.35rem' }}>{triggerLabel(row.type)}</td>
-                                        <td style={{ padding: '0.55rem 0.35rem', color: 'var(--text-secondary)' }}>
+                                        </div>
+                                    </div>
+                                    <div style={{ marginBottom: '0.55rem' }}>
+                                        <div className="emergency-log-card-label">{t('emergency_log_col_trigger')}</div>
+                                        <div style={{ fontSize: '0.92rem' }}>{triggerLabel(row.type)}</div>
+                                    </div>
+                                    <div style={{ marginBottom: '0.55rem' }}>
+                                        <div className="emergency-log-card-label">{t('emergency_log_col_location')}</div>
+                                        <div style={{ fontSize: '0.92rem', color: 'var(--text-secondary)' }}>
                                             {row.location?.lat != null && row.location?.lng != null
                                                 ? t('emergency_log_location_yes')
                                                 : t('emergency_log_location_no')}
-                                        </td>
-                                        <td style={{ padding: '0.55rem 0.35rem' }}>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="emergency-log-card-label">{t('emergency_log_col_status')}</div>
+                                        <div style={{ fontSize: '0.92rem' }}>
                                             {row.resolved ? t('emergency_log_status_resolved') : t('emergency_log_status_active')}
-                                        </td>
-                                        <td style={{ padding: '0.55rem 0.35rem', whiteSpace: 'nowrap' }}>
-                                            {isMine(row) ? (
-                                                editingId === row._id ? (
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                                                        <button type="button" style={btnSmall} onClick={saveEdit} disabled={!!savingEditId}>
-                                                            {savingEditId === row._id ? t('emergency_log_add_saving') : t('emergency_log_save_edit')}
-                                                        </button>
-                                                        <button type="button" style={btnSmall} onClick={cancelEdit} disabled={!!savingEditId}>
-                                                            {t('confirm_cancel')}
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
-                                                        <button type="button" style={btnSmall} onClick={() => startEdit(row)}>
-                                                            {t('emergency_log_edit')}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            style={{ ...btnSmall, borderColor: 'var(--danger-color)', color: 'var(--danger-color)' }}
-                                                            onClick={() => setDeleteId(row._id)}
-                                                        >
-                                                            {t('emergency_log_delete')}
-                                                        </button>
-                                                    </div>
-                                                )
-                                            ) : (
-                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>—</span>
-                                            )}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </>
                 )}
             </div>
             <ConfirmDialog
