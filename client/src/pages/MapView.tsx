@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,14 @@ import AppToolbar from '../components/AppToolbar';
 import { buildGovMapEmbedUrl, distanceKm, roundCoords } from '../utils/govmap';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
+
+function escapeHtml(s: string): string {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+}
 
 function statusColor(status: string): string {
     if (status === 'safe') return '#22c55e';
@@ -16,6 +24,9 @@ function statusColor(status: string): string {
 const MapView: React.FC = () => {
     const { t, i18n } = useTranslation();
     const isRtl = i18n.language?.startsWith('he');
+    const mapRef = useRef<HTMLDivElement>(null);
+    const leafletMapRef = useRef<any>(null);
+    const markersLayerRef = useRef<any>(null);
     const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [familyMembers, setFamilyMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -69,7 +80,7 @@ const MapView: React.FC = () => {
                     setCoords(fallback);
                     setMapCenter(roundCoords(fallback));
                 },
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
             return () => navigator.geolocation.clearWatch(watchId);
         }
@@ -104,12 +115,101 @@ const MapView: React.FC = () => {
         };
     }, []);
 
-    const openInMaps = (lat: number, lng: number) => {
-        window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank', 'noopener,noreferrer');
-    };
+    useEffect(() => {
+        if (!coords || !mapRef.current) return;
+
+        const loadLeaflet = () => {
+            if (document.getElementById('leaflet-js')) {
+                updateMap();
+                return;
+            }
+
+            if (!document.getElementById('leaflet-css')) {
+                const link = document.createElement('link');
+                link.id = 'leaflet-css';
+                link.rel = 'stylesheet';
+                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                document.head.appendChild(link);
+            }
+
+            const script = document.createElement('script');
+            script.id = 'leaflet-js';
+            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+            script.onload = updateMap;
+            document.body.appendChild(script);
+        };
+
+        const updateMap = () => {
+            const L = (window as any).L;
+            if (!L || !mapRef.current) return;
+
+            const view = stableCenter ?? coords;
+
+            if (!leafletMapRef.current) {
+                leafletMapRef.current = L.map(mapRef.current).setView([view.lat, view.lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: t('map_osm_attrib')
+                }).addTo(leafletMapRef.current);
+                markersLayerRef.current = L.layerGroup().addTo(leafletMapRef.current);
+            } else {
+                leafletMapRef.current.setView([view.lat, view.lng], 15);
+                leafletMapRef.current.invalidateSize();
+            }
+
+            const group = markersLayerRef.current;
+            if (!group) return;
+            group.clearLayers();
+
+            const youIcon = L.divIcon({
+                className: 'map-marker-pin map-marker-pin--you',
+                html: '<span class="map-marker-pin-wrap"><span class="map-marker-pin-pulse"></span><span class="map-marker-pin-core"></span></span>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
+            });
+
+            L.marker([coords.lat, coords.lng], { icon: youIcon, zIndexOffset: 1000 })
+                .addTo(group)
+                .bindPopup(`<b>${escapeHtml(t('you_are_here'))}</b>`)
+                .openPopup();
+
+            L.circle([coords.lat, coords.lng], {
+                radius: 80,
+                color: '#3b82f6',
+                fillColor: '#3b82f6',
+                fillOpacity: 0.12,
+                weight: 2
+            }).addTo(group);
+
+            familyMembers.forEach((member: any) => {
+                if (!member.location?.lat || !member.location?.lng) return;
+                const color = statusColor(member.status);
+                const icon = L.divIcon({
+                    className: 'map-marker-pin map-marker-pin--family',
+                    html: `<span class="map-marker-pin-core" style="background:${color}"></span>`,
+                    iconSize: [24, 24],
+                    iconAnchor: [12, 12]
+                });
+                const statusLbl = escapeHtml(t('map_popup_status'));
+                const dist = distanceKm(coords, member.location);
+                const distTxt =
+                    dist < 1
+                        ? t('map_distance_m', { m: Math.round(dist * 1000) })
+                        : t('map_distance_km', { km: dist.toFixed(1) });
+                const popup = `<b>${escapeHtml(member.firstName)} ${escapeHtml(member.lastName)}</b><br>${statusLbl}: ${escapeHtml(String(member.status || ''))}<br>${escapeHtml(distTxt)}`;
+                L.marker([member.location.lat, member.location.lng], { icon }).addTo(group).bindPopup(popup);
+            });
+        };
+
+        loadLeaflet();
+    }, [coords, familyMembers, stableCenter, t, i18n.language]);
 
     const refreshMapCenter = () => {
-        if (coords) setMapCenter(roundCoords(coords));
+        if (!coords) return;
+        const rounded = roundCoords(coords);
+        setMapCenter(rounded);
+        if (leafletMapRef.current) {
+            leafletMapRef.current.setView([rounded.lat, rounded.lng], 15);
+        }
     };
 
     return (
@@ -138,70 +238,20 @@ const MapView: React.FC = () => {
                 {loading ? (
                     <p className="map-loading">{t('retrieving_gps')}</p>
                 ) : (
-                    <div className="map-unified">
-                        <iframe
-                            key={govMapUrl}
-                            title={t('map_govmap_title')}
-                            src={govMapUrl}
-                            className="map-unified-iframe"
-                            allowFullScreen
-                            loading="lazy"
-                            referrerPolicy="no-referrer-when-downgrade"
-                        />
+                    <div className="map-stack">
+                        <div ref={mapRef} className="map-leaflet-canvas" />
 
-                        <div className="map-family-bar-wrap">
-                            <div className="map-family-bar" role="list">
-                                {coords && (
-                                    <button
-                                        type="button"
-                                        className="map-family-chip map-family-chip--you"
-                                        onClick={() => openInMaps(coords.lat, coords.lng)}
-                                    >
-                                        <span
-                                            className="map-family-chip-dot"
-                                            style={{ background: statusColor('safe') }}
-                                        />
-                                        <span className="map-family-chip-name">{t('you_are_here')}</span>
-                                    </button>
-                                )}
-                                {familyMembers.map((member: any) => {
-                                    const dist =
-                                        coords && member.location
-                                            ? distanceKm(coords, member.location)
-                                            : null;
-                                    return (
-                                        <button
-                                            key={member._id}
-                                            type="button"
-                                            className="map-family-chip"
-                                            role="listitem"
-                                            onClick={() =>
-                                                openInMaps(member.location.lat, member.location.lng)
-                                            }
-                                        >
-                                            <span
-                                                className="map-family-chip-dot"
-                                                style={{ background: statusColor(member.status) }}
-                                            />
-                                            <span className="map-family-chip-name">
-                                                {member.firstName} {member.lastName}
-                                            </span>
-                                            {dist != null && (
-                                                <span className="map-family-chip-dist">
-                                                    {dist < 1
-                                                        ? t('map_distance_m', {
-                                                              m: Math.round(dist * 1000)
-                                                          })
-                                                        : t('map_distance_km', { km: dist.toFixed(1) })}
-                                                </span>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                                {familyMembers.length === 0 && (
-                                    <span className="map-family-empty">{t('map_no_family_locations')}</span>
-                                )}
-                            </div>
+                        <p className="map-govmap-section-title">{t('map_govmap_section_title')}</p>
+                        <div className="map-unified map-unified--govmap">
+                            <iframe
+                                key={govMapUrl}
+                                title={t('map_govmap_title')}
+                                src={govMapUrl}
+                                className="map-unified-iframe"
+                                allowFullScreen
+                                loading="lazy"
+                                referrerPolicy="no-referrer-when-downgrade"
+                            />
                         </div>
                     </div>
                 )}

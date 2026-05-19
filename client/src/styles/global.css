@@ -254,6 +254,28 @@ button {
   background: #f59e0b;
 }
 
+.map-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.map-leaflet-canvas {
+  width: 100%;
+  height: min(55vh, 420px);
+  min-height: 280px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  z-index: 1;
+}
+
+.map-govmap-section-title {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 .map-unified {
   position: relative;
   width: 100%;
@@ -268,75 +290,65 @@ button {
 .map-unified-iframe {
   display: block;
   width: 100%;
-  height: 350px;
+  height: 280px;
   border: 0;
 }
 
-.map-family-bar-wrap {
+/* Leaflet custom location pins */
+.map-marker-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
+.map-marker-pin-wrap {
+  position: relative;
+  display: block;
+  width: 32px;
+  height: 32px;
+}
+
+.map-marker-pin-core {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: 8px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 3px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.map-marker-pin--you .map-marker-pin-core {
+  width: 18px;
+  height: 18px;
+  margin: 7px;
+  background: #3b82f6;
+}
+
+.map-marker-pin-pulse {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  padding: 0.5rem;
-  background: linear-gradient(transparent, rgba(15, 23, 42, 0.92));
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  margin: -20px 0 0 -20px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.35);
+  animation: map-pulse 2s ease-out infinite;
   pointer-events: none;
 }
 
-.map-family-bar {
-  display: flex;
-  gap: 0.5rem;
-  overflow-x: auto;
-  padding-bottom: 0.25rem;
-  pointer-events: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-.map-family-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  flex-shrink: 0;
-  padding: 0.4rem 0.65rem;
-  border-radius: 999px;
-  border: 1px solid var(--border-color);
-  background: rgba(30, 41, 59, 0.95);
-  color: var(--text-primary);
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.map-family-chip:hover {
-  background: rgba(51, 65, 85, 0.95);
-}
-
-.map-family-chip--you {
-  border-color: var(--primary-color);
-}
-
-.map-family-chip-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-
-.map-family-chip-name {
-  max-width: 7rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.map-family-chip-dist {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-}
-
-.map-family-empty {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  padding: 0.35rem 0.5rem;
+@keyframes map-pulse {
+  0% {
+    transform: scale(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
 }
 
 .map-loading {
