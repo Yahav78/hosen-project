@@ -220,7 +220,7 @@ const resources = {
       // Map
       "map_title": "View Map",
       "map_desc_unified": "Your location and family on the map above; official shelters & medical centers in GovMap below.",
-      "map_govmap_section_title": "Shelters & medical centers (GovMap)",
+      "map_govmap_section_title": "Public shelters (GovMap)",
       "map_govmap_title": "GovMap — shelters and medical centers",
       "map_legend_you": "You",
       "map_legend_family": "Family (tap for navigation)",
@@ -479,7 +479,7 @@ const resources = {
       // Map
       "map_title": "צפה במפה",
       "map_desc_unified": "המיקום שלך והמשפחה במפה למעלה; מקלטים ומרכזים רפואיים ב-GovMap למטה.",
-      "map_govmap_section_title": "מקלטים ומרכזים רפואיים (GovMap)",
+      "map_govmap_section_title": "מקלטים ציבוריים (GovMap)",
       "map_govmap_title": "GovMap — מקלטים ומרכזים רפואיים",
       "map_legend_you": "את/ה",
       "map_legend_family": "משפחה (לחיצה לניווט)",
