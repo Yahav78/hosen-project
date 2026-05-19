@@ -200,6 +200,56 @@ button {
   min-height: clamp(260px, 50vh, 600px);
 }
 
+.map-layer-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.map-layer-toggle input {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--primary-color);
+}
+
+.map-govmap-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: min(55vh, 520px);
+}
+
+.map-govmap-iframe {
+  flex: 1;
+  width: 100%;
+  min-height: min(50vh, 480px);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: #1e293b;
+}
+
+.map-govmap-hint {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.map-govmap-link {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.map-govmap-link:hover {
+  text-decoration: underline;
+}
+
 .profile-field-row {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) 2fr;

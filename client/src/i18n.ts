@@ -219,7 +219,15 @@ const resources = {
       "view_file": "View File",
       // Map
       "map_title": "View Map",
-      "map_desc": "Localizing safe zones and connected user coordinates securely.",
+      "map_desc": "Family locations and official emergency facilities (shelters, hospitals) via GovMap.",
+      "map_tab_family": "Family & location",
+      "map_tab_facilities": "Shelters & hospitals",
+      "map_layer_shelters": "Public shelters",
+      "map_layer_hospitals": "Hospitals",
+      "map_govmap_title": "GovMap — emergency facilities",
+      "map_govmap_hint": "Official data from GovMap (Israel). Tap markers on the map for details.",
+      "map_open_govmap": "Open full map on GovMap",
+      "map_select_one_layer": "Select at least one layer to display.",
       "retrieving_gps": "Retrieving GPS Coordinates...",
       "you_are_here": "You are here",
       "res_family_connected": "Family network connected ({{count}} members).",
@@ -466,7 +474,15 @@ const resources = {
       "view_file": "צפה בקובץ",
       // Map
       "map_title": "צפה במפה",
-      "map_desc": "איתור אזורים בטוחים ומיקומי משתמשים בצורה מאובטחת.",
+      "map_desc": "מיקום המשפחה ושכבות חירום רשמיות (מקלטים, בתי חולים) מ-GovMap.",
+      "map_tab_family": "משפחה ומיקום",
+      "map_tab_facilities": "מקלטים ורפואה",
+      "map_layer_shelters": "מקלטים ציבוריים",
+      "map_layer_hospitals": "בתי חולים",
+      "map_govmap_title": "GovMap — מתקנים לחירום",
+      "map_govmap_hint": "נתונים רשמיים מ-GovMap (ממשלת ישראל). לחצו על סמלים במפה לפרטים.",
+      "map_open_govmap": "פתיחת המפה המלאה ב-GovMap",
+      "map_select_one_layer": "בחרו לפחות שכבה אחת להצגה.",
       "retrieving_gps": "מאתר מיקום GPS...",
       "you_are_here": "אתם כאן"
     }
