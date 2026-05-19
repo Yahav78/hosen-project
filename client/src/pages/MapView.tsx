@@ -1,55 +1,35 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 import { useTranslation } from 'react-i18next';
 import AppToolbar from '../components/AppToolbar';
-import {
-    buildGovMapEmbedUrl,
-    GOVMAP_LAYER_HOSPITALS,
-    GOVMAP_LAYER_SHELTERS
-} from '../utils/govmap';
+import { buildGovMapEmbedUrl, distanceKm, roundCoords } from '../utils/govmap';
 
 const API_URL = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : 'http://localhost:5000/api';
 
-type MapTab = 'family' | 'facilities';
-
-function escapeHtml(s: string): string {
-    return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+function statusColor(status: string): string {
+    if (status === 'safe') return '#22c55e';
+    if (status === 'in-danger') return '#ef4444';
+    return '#94a3b8';
 }
 
 const MapView: React.FC = () => {
     const { t, i18n } = useTranslation();
     const isRtl = i18n.language?.startsWith('he');
-    const mapRef = useRef<HTMLDivElement>(null);
     const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
     const [familyMembers, setFamilyMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
-    const [mapTab, setMapTab] = useState<MapTab>('family');
-    const [showShelters, setShowShelters] = useState(true);
-    const [showHospitals, setShowHospitals] = useState(true);
-    const watchIdRef = useRef<number | null>(null);
-    const leafletMapRef = useRef<any>(null);
+    const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number } | null>(null);
 
-    const govMapLayers = useMemo(() => {
-        const layers: string[] = [];
-        if (showShelters) layers.push(GOVMAP_LAYER_SHELTERS);
-        if (showHospitals) layers.push(GOVMAP_LAYER_HOSPITALS);
-        return layers;
-    }, [showShelters, showHospitals]);
+    const stableCenter = mapCenter ?? (coords ? roundCoords(coords) : null);
 
     const govMapUrl = useMemo(
         () =>
             buildGovMapEmbedUrl({
-                lat: coords?.lat,
-                lng: coords?.lng,
-                layers: govMapLayers.length > 0 ? govMapLayers : [GOVMAP_LAYER_SHELTERS],
-                zoom: 7
+                lat: stableCenter?.lat,
+                lng: stableCenter?.lng
             }),
-        [coords, govMapLayers]
+        [stableCenter]
     );
 
     useEffect(() => {
@@ -70,7 +50,7 @@ const MapView: React.FC = () => {
         fetchFamily();
 
         if (navigator.geolocation) {
-            watchIdRef.current = navigator.geolocation.watchPosition(
+            const watchId = navigator.geolocation.watchPosition(
                 (position) => {
                     const newCoords = {
                         lat: position.coords.latitude,
@@ -85,15 +65,28 @@ const MapView: React.FC = () => {
                 (error) => {
                     console.error('Geolocation error:', error);
                     setLoading(false);
-                    setCoords({ lat: 31.0461, lng: 34.8516 });
+                    const fallback = { lat: 31.0461, lng: 34.8516 };
+                    setCoords(fallback);
+                    setMapCenter(roundCoords(fallback));
                 },
                 { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
             );
-        } else {
-            setLoading(false);
-            setCoords({ lat: 31.0461, lng: 34.8516 });
+            return () => navigator.geolocation.clearWatch(watchId);
         }
 
+        setLoading(false);
+        const fallback = { lat: 31.0461, lng: 34.8516 };
+        setCoords(fallback);
+        setMapCenter(roundCoords(fallback));
+    }, []);
+
+    useEffect(() => {
+        if (coords && !mapCenter) {
+            setMapCenter(roundCoords(coords));
+        }
+    }, [coords, mapCenter]);
+
+    useEffect(() => {
         const socket = io(import.meta.env.VITE_API_URL || 'http://localhost:5000');
         socket.on('locationUpdated', (data: any) => {
             setFamilyMembers((prev: any[]) => {
@@ -106,86 +99,18 @@ const MapView: React.FC = () => {
                 return prev;
             });
         });
-
         return () => {
-            if (watchIdRef.current !== null) {
-                navigator.geolocation.clearWatch(watchIdRef.current);
-            }
             socket.disconnect();
         };
     }, []);
 
-    useEffect(() => {
-        if (mapTab !== 'family' || !coords || !mapRef.current) return;
+    const openInMaps = (lat: number, lng: number) => {
+        window.open(`https://www.google.com/maps?q=${lat},${lng}`, '_blank', 'noopener,noreferrer');
+    };
 
-        const loadLeaflet = () => {
-            if (document.getElementById('leaflet-js')) {
-                initializeMap();
-                return;
-            }
-
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-            document.head.appendChild(link);
-
-            const script = document.createElement('script');
-            script.id = 'leaflet-js';
-            script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = initializeMap;
-            document.body.appendChild(script);
-        };
-
-        const initializeMap = () => {
-            const L = (window as any).L;
-            if (!L || !mapRef.current) return;
-
-            if (!leafletMapRef.current) {
-                leafletMapRef.current = L.map(mapRef.current).setView([coords.lat, coords.lng], 13);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: t('map_osm_attrib')
-                }).addTo(leafletMapRef.current);
-            } else {
-                leafletMapRef.current.setView([coords.lat, coords.lng]);
-                leafletMapRef.current.invalidateSize();
-            }
-
-            const map = leafletMapRef.current;
-
-            map.eachLayer((layer: any) => {
-                if (layer instanceof L.Marker) {
-                    map.removeLayer(layer);
-                }
-            });
-
-            L.marker([coords.lat, coords.lng])
-                .addTo(map)
-                .bindPopup(t('you_are_here', 'You are here 📍'))
-                .openPopup();
-
-            familyMembers.forEach((member: any) => {
-                if (member.location?.lat && member.location?.lng) {
-                    const statusLbl = escapeHtml(t('map_popup_status'));
-                    const tooltip = `<b>${escapeHtml(member.firstName)} ${escapeHtml(member.lastName)}</b><br>${statusLbl}: ${escapeHtml(String(member.status || ''))}`;
-                    L.marker([member.location.lat, member.location.lng]).addTo(map).bindPopup(tooltip);
-                }
-            });
-        };
-
-        loadLeaflet();
-    }, [coords, familyMembers, t, i18n.language, mapTab]);
-
-    const tabBtnStyle = (active: boolean): React.CSSProperties => ({
-        flex: 1,
-        padding: '0.65rem 1rem',
-        border: '1px solid var(--border-color)',
-        borderRadius: '8px',
-        background: active ? 'var(--primary-color)' : 'rgba(15, 23, 42, 0.5)',
-        color: active ? '#fff' : 'var(--text-secondary)',
-        fontWeight: active ? 600 : 400,
-        cursor: 'pointer',
-        transition: 'all 0.2s ease'
-    });
+    const refreshMapCenter = () => {
+        if (coords) setMapCenter(roundCoords(coords));
+    };
 
     return (
         <div
@@ -194,109 +119,108 @@ const MapView: React.FC = () => {
             dir={isRtl ? 'rtl' : 'ltr'}
         >
             <AppToolbar />
-            <div
-                className="glass-panel map-panel-container"
-                style={{
-                    padding: 'clamp(1rem, 4vw, 2rem)',
-                    marginTop: '1rem',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }}
-            >
+            <div className="glass-panel map-panel-container map-panel-unified">
                 <h2 style={{ color: 'var(--primary-color)', marginBottom: '0.5rem' }}>📍 {t('map_title')}</h2>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{t('map_desc')}</p>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>{t('map_desc_unified')}</p>
 
-                <div
-                    className="map-tab-row"
-                    style={{
-                        display: 'flex',
-                        gap: '0.5rem',
-                        marginBottom: '1rem',
-                        flexDirection: isRtl ? 'row-reverse' : 'row'
-                    }}
-                >
-                    <button type="button" style={tabBtnStyle(mapTab === 'family')} onClick={() => setMapTab('family')}>
-                        {t('map_tab_family')}
-                    </button>
-                    <button
-                        type="button"
-                        style={tabBtnStyle(mapTab === 'facilities')}
-                        onClick={() => setMapTab('facilities')}
-                    >
-                        {t('map_tab_facilities')}
-                    </button>
+                <div className="map-legend">
+                    <span className="map-legend-item">
+                        <span className="map-legend-dot map-legend-dot--you" /> {t('map_legend_you')}
+                    </span>
+                    <span className="map-legend-item">
+                        <span className="map-legend-dot map-legend-dot--family" /> {t('map_legend_family')}
+                    </span>
+                    <span className="map-legend-item">
+                        <span className="map-legend-dot map-legend-dot--govmap" /> {t('map_legend_govmap')}
+                    </span>
                 </div>
 
-                {mapTab === 'facilities' && (
-                    <div
-                        className="map-layer-toggles"
-                        style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '1rem',
-                            marginBottom: '1rem',
-                            flexDirection: isRtl ? 'row-reverse' : 'row'
-                        }}
-                    >
-                        <label className="map-layer-toggle">
-                            <input
-                                type="checkbox"
-                                checked={showShelters}
-                                onChange={(e) => setShowShelters(e.target.checked)}
-                            />
-                            <span>🛡️ {t('map_layer_shelters')}</span>
-                        </label>
-                        <label className="map-layer-toggle">
-                            <input
-                                type="checkbox"
-                                checked={showHospitals}
-                                onChange={(e) => setShowHospitals(e.target.checked)}
-                            />
-                            <span>🏥 {t('map_layer_hospitals')}</span>
-                        </label>
+                {loading ? (
+                    <p className="map-loading">{t('retrieving_gps')}</p>
+                ) : (
+                    <div className="map-unified">
+                        <iframe
+                            key={govMapUrl}
+                            title={t('map_govmap_title')}
+                            src={govMapUrl}
+                            className="map-unified-iframe"
+                            allowFullScreen
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                        />
+
+                        <div className="map-family-bar-wrap">
+                            <div className="map-family-bar" role="list">
+                                {coords && (
+                                    <button
+                                        type="button"
+                                        className="map-family-chip map-family-chip--you"
+                                        onClick={() => openInMaps(coords.lat, coords.lng)}
+                                    >
+                                        <span
+                                            className="map-family-chip-dot"
+                                            style={{ background: statusColor('safe') }}
+                                        />
+                                        <span className="map-family-chip-name">{t('you_are_here')}</span>
+                                    </button>
+                                )}
+                                {familyMembers.map((member: any) => {
+                                    const dist =
+                                        coords && member.location
+                                            ? distanceKm(coords, member.location)
+                                            : null;
+                                    return (
+                                        <button
+                                            key={member._id}
+                                            type="button"
+                                            className="map-family-chip"
+                                            role="listitem"
+                                            onClick={() =>
+                                                openInMaps(member.location.lat, member.location.lng)
+                                            }
+                                        >
+                                            <span
+                                                className="map-family-chip-dot"
+                                                style={{ background: statusColor(member.status) }}
+                                            />
+                                            <span className="map-family-chip-name">
+                                                {member.firstName} {member.lastName}
+                                            </span>
+                                            {dist != null && (
+                                                <span className="map-family-chip-dist">
+                                                    {dist < 1
+                                                        ? t('map_distance_m', {
+                                                              m: Math.round(dist * 1000)
+                                                          })
+                                                        : t('map_distance_km', { km: dist.toFixed(1) })}
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                                {familyMembers.length === 0 && (
+                                    <span className="map-family-empty">{t('map_no_family_locations')}</span>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 )}
 
-                {loading ? (
-                    <p style={{ textAlign: 'center', marginTop: '2rem' }}>{t('retrieving_gps')}</p>
-                ) : mapTab === 'family' ? (
-                    <div
-                        ref={mapRef}
-                        className="map-canvas"
-                        style={{
-                            flex: 1,
-                            minHeight: 'min(55vh, 480px)',
-                            borderRadius: '12px',
-                            border: '1px solid var(--border-color)',
-                            zIndex: 1
-                        }}
-                    />
-                ) : (
-                    <div className="map-govmap-wrap">
-                        {govMapLayers.length === 0 ? (
-                            <p className="map-govmap-hint">{t('map_select_one_layer')}</p>
-                        ) : (
-                            <iframe
-                                key={govMapUrl}
-                                title={t('map_govmap_title')}
-                                src={govMapUrl}
-                                className="map-govmap-iframe"
-                                allowFullScreen
-                                loading="lazy"
-                                referrerPolicy="no-referrer-when-downgrade"
-                            />
-                        )}
-                        <p className="map-govmap-hint">{t('map_govmap_hint')}</p>
-                        <a
-                            href={govMapUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="map-govmap-link"
-                        >
-                            {t('map_open_govmap')} ↗
-                        </a>
-                    </div>
+                {!loading && coords && (
+                    <button type="button" className="map-refresh-center" onClick={refreshMapCenter}>
+                        {t('map_refresh_location')}
+                    </button>
                 )}
+
+                <p className="map-govmap-hint">{t('map_unified_hint')}</p>
+                <a
+                    href={govMapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="map-govmap-link"
+                >
+                    {t('map_open_govmap')} ↗
+                </a>
             </div>
         </div>
     );
