@@ -230,9 +230,6 @@ const MapView: React.FC = () => {
                     <span className="map-legend-item">
                         <span className="map-legend-dot map-legend-dot--family" /> {t('map_legend_family')}
                     </span>
-                    <span className="map-legend-item">
-                        <span className="map-legend-dot map-legend-dot--govmap" /> {t('map_legend_govmap')}
-                    </span>
                 </div>
 
                 {loading ? (
@@ -264,10 +261,10 @@ const MapView: React.FC = () => {
                                 referrerPolicy="no-referrer-when-downgrade"
                             />
                         </div>
+                        <p className="map-govmap-hint">{t('map_govmap_attribution')}</p>
                     </div>
                 )}
 
-                <p className="map-govmap-hint">{t('map_unified_hint')}</p>
                 <a
                     href={govMapUrl}
                     target="_blank"
