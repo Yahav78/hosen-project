@@ -260,6 +260,17 @@ button {
   gap: 0.75rem;
 }
 
+.map-location-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.map-location-block .map-refresh-center {
+  margin-top: 0;
+  align-self: flex-start;
+}
+
 .map-leaflet-canvas {
   width: 100%;
   height: min(55vh, 420px);

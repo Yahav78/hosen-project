@@ -239,7 +239,18 @@ const MapView: React.FC = () => {
                     <p className="map-loading">{t('retrieving_gps')}</p>
                 ) : (
                     <div className="map-stack">
-                        <div ref={mapRef} className="map-leaflet-canvas" />
+                        <div className="map-location-block">
+                            <div ref={mapRef} className="map-leaflet-canvas" />
+                            {coords && (
+                                <button
+                                    type="button"
+                                    className="map-refresh-center"
+                                    onClick={refreshMapCenter}
+                                >
+                                    {t('map_refresh_location')}
+                                </button>
+                            )}
+                        </div>
 
                         <p className="map-govmap-section-title">{t('map_govmap_section_title')}</p>
                         <div className="map-unified map-unified--govmap">
@@ -254,12 +265,6 @@ const MapView: React.FC = () => {
                             />
                         </div>
                     </div>
-                )}
-
-                {!loading && coords && (
-                    <button type="button" className="map-refresh-center" onClick={refreshMapCenter}>
-                        {t('map_refresh_location')}
-                    </button>
                 )}
 
                 <p className="map-govmap-hint">{t('map_unified_hint')}</p>
